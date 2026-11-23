@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ja" data-app="eitango">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>英単語トレーニング</title>
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1f2328; --muted:#646b73; --line:#dcdad3;
+  --accent:#2f5bd3; --accent-ink:#ffffff; --ok:#1d7a46; --ok-bg:#e3f3ea; --ng:#b42318; --ng-bg:#fbe7e5;
+  --chip:#eeece6; --kbd:#f0efea;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17191c; --panel:#202328; --ink:#e8e9eb; --muted:#9aa1a9; --line:#363a41;
+    --accent:#7d9cf0; --accent-ink:#0f1320; --ok:#5fc48a; --ok-bg:#1d3326; --ng:#f2867b; --ng-bg:#3a2220;
+    --chip:#2b2f35; --kbd:#2b2f35;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:16px;padding:12px 24px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:18px;margin:0 12px 0 0}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--ink);padding:6px 12px;border-radius:8px;font:inherit;cursor:pointer}
+nav button[aria-current="true"]{background:var(--chip);border-color:var(--line);font-weight:600}
+nav button:hover{background:var(--chip)}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 12px}
+h3{font-size:16px;margin:16px 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--accent);color:var(--accent-ink);border:none;padding:10px 18px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+.btn.secondary{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,nav button:focus-visible,.choice:focus-visible,select:focus-visible,label.chk:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 6px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:24px}
+label.chk{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--chip);cursor:pointer}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.card{min-height:260px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;user-select:none}
+.word{font-size:44px;font-weight:700;letter-spacing:.01em}
+.pos{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--muted);margin:4px 0}
+.lv{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:4px}
+.meaning{font-size:26px;font-weight:600;margin-top:12px}
+.example{margin-top:12px;font-size:16px}
+.progress{height:6px;background:var(--chip);border-radius:999px;overflow:hidden;margin:8px 0 16px}
+.progress>i{display:block;height:100%;background:var(--accent)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+@media (max-width:560px){.choices{grid-template-columns:1fr}.word{font-size:34px}}
+.choice{display:flex;gap:10px;align-items:center;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-size:17px;cursor:pointer}
+.choice:hover:not(:disabled){border-color:var(--accent)}
+.choice .n{flex:none}
+.choice.correct{background:var(--ok-bg);border-color:var(--ok)}
+.choice.wrong{background:var(--ng-bg);border-color:var(--ng)}
+.feedback{margin-top:14px;font-weight:600;min-height:1.6em}
+.feedback.ok{color:var(--ok)} .feedback.ng{color:var(--ng)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+.hint{font-size:13px;color:var(--muted);margin-top:12px}
+.hidden{display:none!important}
+.bar{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px}
+.bar div{flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.bar-labels{display:flex;gap:4px;font-size:11px;color:var(--muted)}
+.bar-labels span{flex:1;text-align:center}
+</style>
+<!-- iOS版で追加 -->
+<link rel="manifest" href="manifest-eitango.webmanifest">
+<link rel="apple-touch-icon" href="icons/eitango-180.png">
+<link rel="icon" href="icons/eitango-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="英単語">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#202328" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="ios.css">
+</head>
+<body>
+<header>
+  <h1>英単語トレーニング</h1>
+  <nav id="nav">
+    <button data-view="home">ホーム <kbd>H</kbd></button>
+    <button data-view="cards">単語カード <kbd>C</kbd></button>
+    <button data-view="quiz">4択クイズ <kbd>Q</kbd></button>
+    <button data-view="review">復習 <kbd>R</kbd></button>
+    <button data-view="records">学習記録 <kbd>L</kbd></button>
+  </nav>
+</header>
+<main>
+
+<!-- ホーム -->
+<section id="view-home">
+  <div class="panel">
+    <h2>今日の学習</h2>
+    <div class="stats" id="homeStats"></div>
+  </div>
+  <div class="panel">
+    <h2>出題範囲</h2>
+    <div class="row" id="levelChecks"></div>
+    <div class="row" style="margin-top:12px">
+      <label>品詞 <select id="posSelect"></select></label>
+      <label>1回の問題数 <select id="countSelect">
+        <option value="10">10問</option><option value="20" selected>20問</option><option value="30">30問</option><option value="0">範囲の全部</option>
+      </select></label>
+    </div>
+    <p class="muted small" id="rangeInfo"></p>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" data-go="cards">単語カードで覚える</button>
+      <button class="btn" data-go="quiz">4択クイズに挑戦</button>
+      <button class="btn secondary" data-go="review" id="homeReviewBtn">復習する</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>キーボード操作</h2>
+    <table>
+      <tr><th>どこでも</th><td><kbd>H</kbd> ホーム <kbd>C</kbd> 単語カード <kbd>Q</kbd> クイズ <kbd>R</kbd> 復習 <kbd>L</kbd> 学習記録</td></tr>
+      <tr><th>単語カード</th><td><kbd>Space</kbd> 裏返す <kbd>→</kbd> 次へ <kbd>←</kbd> 前へ <kbd>K</kbd> 覚えた <kbd>J</kbd> まだ <kbd>S</kbd> 発音を聞く <kbd>E</kbd> 例文を聞く(裏返したとき)</td></tr>
+      <tr><th>4択クイズ・復習</th><td><kbd>1</kbd>〜<kbd>4</kbd> 解答 <kbd>Enter</kbd> 次の問題 <kbd>S</kbd> 発音を聞く <kbd>E</kbd> 例文を聞く(解答後)</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <h2>単語リスト</h2>
+    <p class="small" id="dataInfo"></p>
+    <div class="row">
+      <label class="btn secondary" for="fileInput" style="display:inline-block">リストを読み込む(CSV / JSON)</label>
+      <input type="file" id="fileInput" accept=".csv,.json,text/csv,application/json" class="hidden">
+      <button class="btn secondary" id="resetDataBtn">組み込みのリストに戻す</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label>読み上げの声 <select id="voiceSelect"><option value="">自動(英語の声)</option></select></label>
+      <button class="btn secondary" id="voiceTest">試しに聞く</button>
+    </div>
+    <p class="hint">項目: id, word, pos, meaning_ja, example_en, example_ja, level。CSVの日本語訳は「・」区切り。</p>
+  </div>
+</section>
+
+<!-- 単語カード -->
+<section id="view-cards" class="hidden">
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">単語カード</h2>
+      <div class="row">
+        <label>表に出す <select id="cardFront"><option value="en">英語</option><option value="ja">日本語</option></select></label>
+        <button class="btn secondary" id="cardRestart">シャッフルしてやり直す</button>
+      </div>
+    </div>
+    <div class="progress"><i id="cardProg"></i></div>
+    <div class="muted small" id="cardCounter"></div>
+  </div>
+  <div class="panel card" id="cardBox" tabindex="0" aria-live="polite"></div>
+  <div class="row" style="justify-content:center">
+    <button class="btn secondary" id="cardPrev">← 前へ</button>
+    <button class="btn secondary" id="cardFlip">裏返す <kbd>Space</kbd></button>
+    <button class="btn secondary" id="cardNg">まだ <kbd>J</kbd></button>
+    <button class="btn" id="cardOk">覚えた <kbd>K</kbd></button>
+    <button class="btn secondary" id="cardNext">次へ →</button>
+  </div>
+  <p class="hint" style="text-align:center">「まだ」を押した単語は復習リストに入ります。</p>
+</section>
+
+<!-- クイズ(通常・復習共通) -->
+<section id="view-quiz" class="hidden">
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0" id="quizTitle">4択クイズ</h2>
+      <label>出題形式 <select id="quizDir">
+        <option value="en2ja">英語 → 日本語</option>
+        <option value="ja2en">日本語 → 英語</option>
+        <option value="mix">ミックス</option>
+      </select></label>
+    </div>
+    <div class="progress"><i id="quizProg"></i></div>
+    <div class="muted small" id="quizCounter"></div>
+  </div>
+  <div class="panel" id="quizBox"></div>
+</section>
+
+<!-- 学習記録 -->
+<section id="view-records" class="hidden">
+  <div class="panel">
+    <h2>学習記録</h2>
+    <div class="stats" id="recStats"></div>
+    <h3>最近14日の解答数</h3>
+    <div class="bar" id="recBars"></div>
+    <div class="bar-labels" id="recBarLabels"></div>
+  </div>
+  <div class="panel">
+    <h2>難易度別の正答率</h2>
+    <table id="recLevels"></table>
+  </div>
+  <div class="panel">
+    <h2>よく間違える単語</h2>
+    <table id="recWeak"></table>
+  </div>
+  <div class="panel">
+    <h2>記録の管理</h2>
+    <p class="small muted">記録はこのパソコンのブラウザ内(localStorage)だけに保存されます。別のブラウザやパソコンとは共有されません。</p>
+    <div class="row">
+      <button class="btn secondary" id="exportBtn">記録を書き出す(JSON)</button>
+      <button class="btn secondary" id="clearBtn">記録をすべて消す</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ===== 単語データ =====
+   形式は wordlist/words_v2_aichi.json と同じ(topic, aichi_priority, speak は省略可):
+   { id, word, pos, meaning_ja: [..], example_en, example_ja, level: "基本"|"標準"|"発展" }
+   別のリストは画面の「リストを読み込む」から差し替えられます。 */
+const BUILTIN_WORDS = [{"id":1,"word":"school","pos":"名詞","meaning_ja":["学校"],"example_en":"I go to school by bus.","example_ja":"私はバスで学校に行きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":2,"word":"friend","pos":"名詞","meaning_ja":["友だち"],"example_en":"Ken is my best friend.","example_ja":"ケンは私の親友です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":3,"word":"family","pos":"名詞","meaning_ja":["家族"],"example_en":"There are five people in my family.","example_ja":"私の家族は5人です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":4,"word":"book","pos":"名詞","meaning_ja":["本"],"example_en":"This book is very interesting.","example_ja":"この本はとてもおもしろい。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":5,"word":"water","pos":"名詞","meaning_ja":["水"],"example_en":"Can I have some water?","example_ja":"水をもらえますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":6,"word":"time","pos":"名詞","meaning_ja":["時間","〜回"],"example_en":"What time is it now?","example_ja":"今何時ですか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":7,"word":"day","pos":"名詞","meaning_ja":["日","昼間"],"example_en":"It was a sunny day.","example_ja":"晴れた日でした。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":8,"word":"week","pos":"名詞","meaning_ja":["週"],"example_en":"I play tennis twice a week.","example_ja":"私は週に2回テニスをします。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":9,"word":"year","pos":"名詞","meaning_ja":["年","〜歳"],"example_en":"She is fifteen years old.","example_ja":"彼女は15歳です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":10,"word":"morning","pos":"名詞","meaning_ja":["朝","午前"],"example_en":"I get up at six every morning.","example_ja":"私は毎朝6時に起きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":11,"word":"night","pos":"名詞","meaning_ja":["夜"],"example_en":"I watched the stars last night.","example_ja":"昨夜、星を見ました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":12,"word":"teacher","pos":"名詞","meaning_ja":["先生","教師"],"example_en":"Ms. Sato is our English teacher.","example_ja":"佐藤先生は私たちの英語の先生です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":13,"word":"student","pos":"名詞","meaning_ja":["生徒","学生"],"example_en":"He is a student at this school.","example_ja":"彼はこの学校の生徒です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":14,"word":"house","pos":"名詞","meaning_ja":["家"],"example_en":"My house is near the station.","example_ja":"私の家は駅の近くです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":15,"word":"room","pos":"名詞","meaning_ja":["部屋"],"example_en":"Please clean your room.","example_ja":"部屋を掃除してください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":16,"word":"city","pos":"名詞","meaning_ja":["市","都市"],"example_en":"Kyoto is an old city.","example_ja":"京都は古い都市です。","level":"基本","topic":"文化・社会","aichi_priority":"A"},{"id":17,"word":"country","pos":"名詞","meaning_ja":["国","いなか"],"example_en":"Japan is a beautiful country.","example_ja":"日本は美しい国です。","level":"基本","topic":"文化・社会","aichi_priority":"A"},{"id":18,"word":"food","pos":"名詞","meaning_ja":["食べ物"],"example_en":"What is your favorite food?","example_ja":"あなたの好きな食べ物は何ですか。","level":"基本","topic":"食・健康","aichi_priority":"A"},{"id":19,"word":"music","pos":"名詞","meaning_ja":["音楽"],"example_en":"I listen to music every day.","example_ja":"私は毎日音楽を聞きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":20,"word":"sport","pos":"名詞","meaning_ja":["スポーツ"],"example_en":"Soccer is a popular sport.","example_ja":"サッカーは人気のあるスポーツです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":21,"word":"dog","pos":"名詞","meaning_ja":["犬"],"example_en":"We have a small dog.","example_ja":"私たちは小さな犬を飼っています。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":22,"word":"station","pos":"名詞","meaning_ja":["駅"],"example_en":"Let's meet at the station.","example_ja":"駅で会いましょう。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":23,"word":"park","pos":"名詞","meaning_ja":["公園"],"example_en":"Children are playing in the park.","example_ja":"子どもたちが公園で遊んでいます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":24,"word":"library","pos":"名詞","meaning_ja":["図書館"],"example_en":"I borrowed two books from the library.","example_ja":"図書館で本を2冊借りました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":25,"word":"hospital","pos":"名詞","meaning_ja":["病院"],"example_en":"My mother works at a hospital.","example_ja":"母は病院で働いています。","level":"基本","topic":"食・健康","aichi_priority":"A"},{"id":26,"word":"weather","pos":"名詞","meaning_ja":["天気"],"example_en":"How is the weather today?","example_ja":"今日の天気はどうですか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":27,"word":"season","pos":"名詞","meaning_ja":["季節"],"example_en":"Which season do you like the best?","example_ja":"どの季節がいちばん好きですか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":28,"word":"language","pos":"名詞","meaning_ja":["言語","言葉"],"example_en":"How many languages can you speak?","example_ja":"何か国語を話せますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":29,"word":"question","pos":"名詞","meaning_ja":["質問","問題"],"example_en":"May I ask you a question?","example_ja":"質問してもいいですか。","level":"基本","topic":"会話","aichi_priority":"A"},{"id":30,"word":"answer","pos":"名詞","meaning_ja":["答え"],"example_en":"I know the answer.","example_ja":"私は答えを知っています。","level":"基本","topic":"会話","aichi_priority":"A"},{"id":31,"word":"homework","pos":"名詞","meaning_ja":["宿題"],"example_en":"I have a lot of homework today.","example_ja":"今日は宿題がたくさんあります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":32,"word":"club","pos":"名詞","meaning_ja":["クラブ","部活動"],"example_en":"I'm in the art club.","example_ja":"私は美術部に入っています。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":33,"word":"money","pos":"名詞","meaning_ja":["お金"],"example_en":"I don't have much money.","example_ja":"私はあまりお金を持っていません。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":34,"word":"picture","pos":"名詞","meaning_ja":["写真","絵"],"example_en":"Can I take a picture here?","example_ja":"ここで写真を撮ってもいいですか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":35,"word":"idea","pos":"名詞","meaning_ja":["考え","アイデア"],"example_en":"That's a good idea.","example_ja":"それはいい考えですね。","level":"基本","topic":"会話","aichi_priority":"A"},{"id":36,"word":"go","pos":"動詞","meaning_ja":["行く"],"example_en":"I go to the library on Sundays.","example_ja":"私は日曜日に図書館に行きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":37,"word":"come","pos":"動詞","meaning_ja":["来る"],"example_en":"Please come to my party.","example_ja":"私のパーティーに来てください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":38,"word":"have","pos":"動詞","meaning_ja":["持っている","食べる"],"example_en":"I have two brothers.","example_ja":"私には兄弟が2人います。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":39,"word":"like","pos":"動詞","meaning_ja":["好きだ"],"example_en":"I like English very much.","example_ja":"私は英語が大好きです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":40,"word":"play","pos":"動詞","meaning_ja":["(スポーツを)する","遊ぶ","演奏する"],"example_en":"She plays the piano well.","example_ja":"彼女はピアノを上手にひきます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":41,"word":"study","pos":"動詞","meaning_ja":["勉強する"],"example_en":"I study math every night.","example_ja":"私は毎晩数学を勉強します。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":42,"word":"eat","pos":"動詞","meaning_ja":["食べる"],"example_en":"We eat lunch at noon.","example_ja":"私たちは正午に昼食を食べます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":43,"word":"drink","pos":"動詞","meaning_ja":["飲む"],"example_en":"I drink milk every morning.","example_ja":"私は毎朝牛乳を飲みます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":44,"word":"see","pos":"動詞","meaning_ja":["見える","会う"],"example_en":"I saw a rainbow yesterday.","example_ja":"昨日、虹を見ました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":45,"word":"look","pos":"動詞","meaning_ja":["見る","〜に見える"],"example_en":"Look at this picture.","example_ja":"この写真を見て。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":46,"word":"watch","pos":"動詞","meaning_ja":["(じっと)見る"],"example_en":"We watched a movie on TV.","example_ja":"私たちはテレビで映画を見ました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":47,"word":"listen","pos":"動詞","meaning_ja":["聞く"],"example_en":"Listen to me carefully.","example_ja":"私の言うことをよく聞いて。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":48,"word":"read","pos":"動詞","meaning_ja":["読む"],"example_en":"My father reads the newspaper every day.","example_ja":"父は毎日新聞を読みます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":49,"word":"write","pos":"動詞","meaning_ja":["書く"],"example_en":"Please write your name here.","example_ja":"ここに名前を書いてください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":50,"word":"speak","pos":"動詞","meaning_ja":["話す"],"example_en":"Do you speak English?","example_ja":"あなたは英語を話しますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":51,"word":"make","pos":"動詞","meaning_ja":["作る","〜にする"],"example_en":"My mother made a cake for me.","example_ja":"母が私にケーキを作ってくれました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":52,"word":"take","pos":"動詞","meaning_ja":["取る","連れて行く","(時間が)かかる"],"example_en":"It takes ten minutes to walk there.","example_ja":"そこまで歩いて10分かかります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":53,"word":"get","pos":"動詞","meaning_ja":["手に入れる","着く","〜になる"],"example_en":"I got a letter from Tom.","example_ja":"トムから手紙をもらいました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":54,"word":"know","pos":"動詞","meaning_ja":["知っている"],"example_en":"Do you know his name?","example_ja":"彼の名前を知っていますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":55,"word":"want","pos":"動詞","meaning_ja":["ほしい","〜したい"],"example_en":"I want to be a doctor.","example_ja":"私は医者になりたいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":56,"word":"live","pos":"動詞","meaning_ja":["住む","生きる"],"example_en":"I live in Nagoya.","example_ja":"私は名古屋に住んでいます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":57,"word":"help","pos":"動詞","meaning_ja":["手伝う","助ける"],"example_en":"Can you help me with my homework?","example_ja":"宿題を手伝ってくれますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":58,"word":"use","pos":"動詞","meaning_ja":["使う"],"example_en":"May I use your pen?","example_ja":"あなたのペンを使ってもいいですか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":59,"word":"walk","pos":"動詞","meaning_ja":["歩く"],"example_en":"I walk to school.","example_ja":"私は歩いて学校に行きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":60,"word":"run","pos":"動詞","meaning_ja":["走る"],"example_en":"He runs very fast.","example_ja":"彼はとても速く走ります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":61,"word":"swim","pos":"動詞","meaning_ja":["泳ぐ"],"example_en":"Can you swim?","example_ja":"あなたは泳げますか。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":62,"word":"sing","pos":"動詞","meaning_ja":["歌う"],"example_en":"Let's sing a song together.","example_ja":"一緒に歌を歌いましょう。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":63,"word":"open","pos":"動詞","meaning_ja":["開ける"],"example_en":"Open your textbooks to page 20.","example_ja":"教科書の20ページを開きなさい。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":64,"word":"close","pos":"動詞","meaning_ja":["閉める"],"example_en":"Please close the window.","example_ja":"窓を閉めてください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":65,"word":"buy","pos":"動詞","meaning_ja":["買う"],"example_en":"I bought a new bag.","example_ja":"新しいかばんを買いました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":66,"word":"give","pos":"動詞","meaning_ja":["与える","あげる"],"example_en":"He gave me a present.","example_ja":"彼は私にプレゼントをくれました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":67,"word":"tell","pos":"動詞","meaning_ja":["話す","伝える","教える"],"example_en":"Please tell me the way to the station.","example_ja":"駅への道を教えてください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":68,"word":"think","pos":"動詞","meaning_ja":["思う","考える"],"example_en":"I think he is right.","example_ja":"彼は正しいと思います。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":69,"word":"start","pos":"動詞","meaning_ja":["始める","始まる"],"example_en":"The class starts at nine.","example_ja":"授業は9時に始まります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":70,"word":"visit","pos":"動詞","meaning_ja":["訪れる"],"example_en":"I visited my grandmother last Sunday.","example_ja":"この前の日曜日、祖母を訪ねました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":71,"word":"good","pos":"形容詞","meaning_ja":["よい","上手な"],"example_en":"She is good at cooking.","example_ja":"彼女は料理が得意です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":72,"word":"big","pos":"形容詞","meaning_ja":["大きい"],"example_en":"That is a big tree.","example_ja":"あれは大きな木です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":73,"word":"small","pos":"形容詞","meaning_ja":["小さい"],"example_en":"I live in a small town.","example_ja":"私は小さな町に住んでいます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":74,"word":"new","pos":"形容詞","meaning_ja":["新しい"],"example_en":"I have a new bike.","example_ja":"私は新しい自転車を持っています。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":75,"word":"old","pos":"形容詞","meaning_ja":["古い","年をとった"],"example_en":"This temple is very old.","example_ja":"このお寺はとても古いです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":76,"word":"happy","pos":"形容詞","meaning_ja":["幸せな","うれしい"],"example_en":"I'm happy to see you.","example_ja":"あなたに会えてうれしいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":77,"word":"busy","pos":"形容詞","meaning_ja":["忙しい"],"example_en":"My father is always busy.","example_ja":"父はいつも忙しいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":78,"word":"hot","pos":"形容詞","meaning_ja":["暑い","熱い"],"example_en":"It's very hot today.","example_ja":"今日はとても暑いです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":79,"word":"cold","pos":"形容詞","meaning_ja":["寒い","冷たい"],"example_en":"It was cold this morning.","example_ja":"今朝は寒かったです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":80,"word":"beautiful","pos":"形容詞","meaning_ja":["美しい"],"example_en":"What a beautiful flower!","example_ja":"なんて美しい花でしょう。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":81,"word":"easy","pos":"形容詞","meaning_ja":["簡単な"],"example_en":"This question is easy.","example_ja":"この問題は簡単です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":82,"word":"difficult","pos":"形容詞","meaning_ja":["難しい"],"example_en":"Math is difficult for me.","example_ja":"数学は私には難しいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":83,"word":"favorite","pos":"形容詞","meaning_ja":["お気に入りの"],"example_en":"Blue is my favorite color.","example_ja":"青は私の好きな色です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":84,"word":"hungry","pos":"形容詞","meaning_ja":["おなかがすいた"],"example_en":"I'm hungry. Let's eat.","example_ja":"おなかがすいた。食べよう。","level":"基本","topic":"食・健康","aichi_priority":"A"},{"id":85,"word":"tired","pos":"形容詞","meaning_ja":["疲れた"],"example_en":"I was very tired after the game.","example_ja":"試合のあと、とても疲れていました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":86,"word":"interesting","pos":"形容詞","meaning_ja":["おもしろい","興味深い"],"example_en":"This story is interesting.","example_ja":"この話はおもしろいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":87,"word":"famous","pos":"形容詞","meaning_ja":["有名な"],"example_en":"Mt. Fuji is famous all over the world.","example_ja":"富士山は世界中で有名です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":88,"word":"always","pos":"副詞","meaning_ja":["いつも"],"example_en":"She always smiles.","example_ja":"彼女はいつもほほえんでいます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":89,"word":"usually","pos":"副詞","meaning_ja":["ふつうは","たいてい"],"example_en":"I usually get up at seven.","example_ja":"私はたいてい7時に起きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":90,"word":"often","pos":"副詞","meaning_ja":["よく","しばしば"],"example_en":"I often go to the park.","example_ja":"私はよく公園に行きます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":91,"word":"sometimes","pos":"副詞","meaning_ja":["ときどき"],"example_en":"I sometimes cook dinner.","example_ja":"私はときどき夕食を作ります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":92,"word":"very","pos":"副詞","meaning_ja":["とても"],"example_en":"Thank you very much.","example_ja":"どうもありがとうございます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":93,"word":"well","pos":"副詞","meaning_ja":["上手に","よく"],"example_en":"He speaks English well.","example_ja":"彼は英語を上手に話します。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":94,"word":"together","pos":"副詞","meaning_ja":["一緒に"],"example_en":"Let's go together.","example_ja":"一緒に行きましょう。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":95,"word":"here","pos":"副詞","meaning_ja":["ここに","ここで"],"example_en":"Come here, please.","example_ja":"こちらに来てください。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":96,"word":"there","pos":"副詞","meaning_ja":["そこに","そこで"],"example_en":"I went there last year.","example_ja":"私は去年そこへ行きました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":97,"word":"today","pos":"副詞","meaning_ja":["今日(は)"],"example_en":"It's my birthday today.","example_ja":"今日は私の誕生日です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":98,"word":"tomorrow","pos":"副詞","meaning_ja":["明日(は)"],"example_en":"See you tomorrow.","example_ja":"また明日。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":99,"word":"yesterday","pos":"副詞","meaning_ja":["昨日(は)"],"example_en":"I was sick yesterday.","example_ja":"昨日は具合が悪かったです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":100,"word":"in","pos":"前置詞","meaning_ja":["〜の中に","〜に(場所・年・月)"],"example_en":"I was born in 2011.","example_ja":"私は2011年に生まれました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":101,"word":"on","pos":"前置詞","meaning_ja":["〜の上に","〜に(曜日・日付)"],"example_en":"The book is on the desk.","example_ja":"その本は机の上にあります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":102,"word":"at","pos":"前置詞","meaning_ja":["〜に","〜で(時刻・地点)"],"example_en":"School starts at 8:30.","example_ja":"学校は8時30分に始まります。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":103,"word":"with","pos":"前置詞","meaning_ja":["〜と一緒に","〜を使って"],"example_en":"I went shopping with my sister.","example_ja":"姉と買い物に行きました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":104,"word":"from","pos":"前置詞","meaning_ja":["〜から"],"example_en":"I'm from Aichi.","example_ja":"私は愛知出身です。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":105,"word":"for","pos":"前置詞","meaning_ja":["〜のために","〜の間"],"example_en":"I waited for an hour.","example_ja":"私は1時間待ちました。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":106,"word":"and","pos":"接続詞","meaning_ja":["〜と…","そして"],"example_en":"I like dogs and cats.","example_ja":"私は犬とねこが好きです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":107,"word":"but","pos":"接続詞","meaning_ja":["しかし"],"example_en":"I'm tired, but I'm happy.","example_ja":"疲れたけれど、うれしいです。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":108,"word":"because","pos":"接続詞","meaning_ja":["なぜなら〜だから"],"example_en":"I stayed home because it was raining.","example_ja":"雨が降っていたので家にいました。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":109,"word":"can","pos":"助動詞","meaning_ja":["〜できる","〜してもよい"],"example_en":"I can play the guitar.","example_ja":"私はギターをひくことができます。","level":"基本","topic":"一般","aichi_priority":"B"},{"id":110,"word":"answer","pos":"動詞","meaning_ja":["答える"],"example_en":"Please answer my question.","example_ja":"私の質問に答えてください。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":111,"word":"try","pos":"動詞","meaning_ja":["試す","やってみる"],"example_en":"Try this cake. It's good.","example_ja":"このケーキを食べてみて。おいしいよ。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":112,"word":"decide","pos":"動詞","meaning_ja":["決める"],"example_en":"I decided to study abroad.","example_ja":"私は留学することに決めました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":113,"word":"forget","pos":"動詞","meaning_ja":["忘れる"],"example_en":"Don't forget your umbrella.","example_ja":"かさを忘れないで。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":114,"word":"remember","pos":"動詞","meaning_ja":["覚えている","思い出す"],"example_en":"I remember his name.","example_ja":"私は彼の名前を覚えています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":115,"word":"understand","pos":"動詞","meaning_ja":["理解する"],"example_en":"I can't understand this word.","example_ja":"この単語の意味がわかりません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":116,"word":"believe","pos":"動詞","meaning_ja":["信じる"],"example_en":"I can't believe it!","example_ja":"信じられない!","level":"標準","topic":"一般","aichi_priority":"B"},{"id":117,"word":"borrow","pos":"動詞","meaning_ja":["借りる"],"example_en":"Can I borrow your eraser?","example_ja":"消しゴムを借りてもいい?","level":"標準","topic":"一般","aichi_priority":"B"},{"id":118,"word":"lend","pos":"動詞","meaning_ja":["貸す"],"example_en":"Could you lend me your dictionary?","example_ja":"辞書を貸していただけますか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":119,"word":"send","pos":"動詞","meaning_ja":["送る"],"example_en":"I'll send you an e-mail.","example_ja":"あなたにメールを送ります。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":120,"word":"spend","pos":"動詞","meaning_ja":["(時間・お金を)使う","過ごす"],"example_en":"I spent the weekend with my family.","example_ja":"週末を家族と過ごしました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":121,"word":"choose","pos":"動詞","meaning_ja":["選ぶ"],"example_en":"You can choose any color.","example_ja":"どの色でも選べます。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":122,"word":"carry","pos":"動詞","meaning_ja":["運ぶ","持ち歩く"],"example_en":"Let me carry your bag.","example_ja":"かばんを持ちましょう。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":123,"word":"arrive","pos":"動詞","meaning_ja":["到着する"],"example_en":"We arrived at the hotel at noon.","example_ja":"私たちは正午にホテルに着きました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":124,"word":"leave","pos":"動詞","meaning_ja":["出発する","去る","置いていく"],"example_en":"The train leaves at 7:10.","example_ja":"電車は7時10分に出発します。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":125,"word":"lose","pos":"動詞","meaning_ja":["なくす","負ける"],"example_en":"I lost my key.","example_ja":"かぎをなくしました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":126,"word":"win","pos":"動詞","meaning_ja":["勝つ"],"example_en":"Our team won the game.","example_ja":"私たちのチームが試合に勝ちました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":127,"word":"grow","pos":"動詞","meaning_ja":["育つ","育てる","成長する"],"example_en":"My father grows tomatoes in the garden.","example_ja":"父は庭でトマトを育てています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":128,"word":"feel","pos":"動詞","meaning_ja":["感じる"],"example_en":"I feel happy when I listen to music.","example_ja":"音楽を聞くと幸せな気持ちになります。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":129,"word":"hope","pos":"動詞","meaning_ja":["望む","願う"],"example_en":"I hope you'll get well soon.","example_ja":"早くよくなるといいですね。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":130,"word":"plan","pos":"動詞","meaning_ja":["計画する"],"example_en":"We are planning a trip to Okinawa.","example_ja":"私たちは沖縄旅行を計画しています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":131,"word":"practice","pos":"動詞","meaning_ja":["練習する"],"example_en":"I practice the piano every day.","example_ja":"私は毎日ピアノを練習します。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":132,"word":"join","pos":"動詞","meaning_ja":["参加する","加わる"],"example_en":"Why don't you join us?","example_ja":"私たちに加わりませんか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":133,"word":"introduce","pos":"動詞","meaning_ja":["紹介する"],"example_en":"Let me introduce myself.","example_ja":"自己紹介させてください。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":134,"word":"invite","pos":"動詞","meaning_ja":["招待する"],"example_en":"She invited me to her birthday party.","example_ja":"彼女は私を誕生日パーティーに招待してくれました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":135,"word":"explain","pos":"動詞","meaning_ja":["説明する"],"example_en":"Can you explain the rule to me?","example_ja":"そのルールを説明してくれますか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":136,"word":"change","pos":"動詞","meaning_ja":["変える","変わる"],"example_en":"The town has changed a lot.","example_ja":"町はずいぶん変わりました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":137,"word":"finish","pos":"動詞","meaning_ja":["終える"],"example_en":"Have you finished your homework yet?","example_ja":"もう宿題を終えましたか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":138,"word":"become","pos":"動詞","meaning_ja":["〜になる"],"example_en":"She became a nurse.","example_ja":"彼女は看護師になりました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":139,"word":"keep","pos":"動詞","meaning_ja":["保つ","持ち続ける"],"example_en":"Keep your room clean.","example_ja":"部屋をきれいにしておきなさい。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":140,"word":"find","pos":"動詞","meaning_ja":["見つける","〜とわかる"],"example_en":"I found the book easy.","example_ja":"その本は簡単だとわかりました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":141,"word":"call","pos":"動詞","meaning_ja":["呼ぶ","電話する"],"example_en":"We call the dog Pochi.","example_ja":"私たちはその犬をポチと呼びます。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":142,"word":"show","pos":"動詞","meaning_ja":["見せる","示す"],"example_en":"Please show me your notebook.","example_ja":"あなたのノートを見せてください。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":143,"word":"teach","pos":"動詞","meaning_ja":["教える"],"example_en":"Mr. Brown teaches us English.","example_ja":"ブラウン先生は私たちに英語を教えています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":144,"word":"learn","pos":"動詞","meaning_ja":["学ぶ","習い覚える"],"example_en":"I learned a lot from this book.","example_ja":"この本から多くを学びました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":145,"word":"travel","pos":"動詞","meaning_ja":["旅行する"],"example_en":"I want to travel around the world.","example_ja":"世界中を旅行したいです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":146,"word":"worry","pos":"動詞","meaning_ja":["心配する"],"example_en":"Don't worry about it.","example_ja":"それについて心配しないで。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":147,"word":"agree","pos":"動詞","meaning_ja":["賛成する","同意する"],"example_en":"I agree with you.","example_ja":"あなたに賛成です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":148,"word":"enjoy","pos":"動詞","meaning_ja":["楽しむ"],"example_en":"I enjoyed talking with you.","example_ja":"あなたと話して楽しかったです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":149,"word":"build","pos":"動詞","meaning_ja":["建てる"],"example_en":"This house was built 100 years ago.","example_ja":"この家は100年前に建てられました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":150,"word":"save","pos":"動詞","meaning_ja":["救う","節約する","ためる"],"example_en":"We should save water.","example_ja":"私たちは水を節約すべきです。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":151,"word":"reach","pos":"動詞","meaning_ja":["〜に着く","届く"],"example_en":"We reached the top of the mountain.","example_ja":"私たちは山頂に着きました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":152,"word":"miss","pos":"動詞","meaning_ja":["乗り遅れる","〜がいなくてさびしい"],"example_en":"I missed the bus this morning.","example_ja":"今朝バスに乗り遅れました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":153,"word":"wish","pos":"動詞","meaning_ja":["願う"],"example_en":"I wish I could fly.","example_ja":"空を飛べたらいいのに。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":154,"word":"experience","pos":"名詞","meaning_ja":["経験"],"example_en":"It was a great experience for me.","example_ja":"それは私にとってすばらしい経験でした。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":155,"word":"future","pos":"名詞","meaning_ja":["未来","将来"],"example_en":"What do you want to be in the future?","example_ja":"将来何になりたいですか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":156,"word":"world","pos":"名詞","meaning_ja":["世界"],"example_en":"English is used all over the world.","example_ja":"英語は世界中で使われています。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":157,"word":"environment","pos":"名詞","meaning_ja":["環境"],"example_en":"We must protect the environment.","example_ja":"私たちは環境を守らなければなりません。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":158,"word":"problem","pos":"名詞","meaning_ja":["問題"],"example_en":"No problem.","example_ja":"問題ありません。(どういたしまして)","level":"標準","topic":"一般","aichi_priority":"B"},{"id":159,"word":"culture","pos":"名詞","meaning_ja":["文化"],"example_en":"I'm interested in Japanese culture.","example_ja":"私は日本文化に興味があります。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":160,"word":"history","pos":"名詞","meaning_ja":["歴史"],"example_en":"I like studying history.","example_ja":"私は歴史を勉強するのが好きです。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":161,"word":"science","pos":"名詞","meaning_ja":["科学","理科"],"example_en":"Science is my favorite subject.","example_ja":"理科は私の好きな教科です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":162,"word":"subject","pos":"名詞","meaning_ja":["教科","話題"],"example_en":"What subject do you like?","example_ja":"どの教科が好きですか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":163,"word":"information","pos":"名詞","meaning_ja":["情報"],"example_en":"I got some information on the Internet.","example_ja":"インターネットで情報を得ました。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":164,"word":"message","pos":"名詞","meaning_ja":["伝言","メッセージ"],"example_en":"Can I leave a message?","example_ja":"伝言をお願いできますか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":165,"word":"volunteer","pos":"名詞","meaning_ja":["ボランティア"],"example_en":"I worked as a volunteer at the event.","example_ja":"そのイベントでボランティアとして働きました。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":166,"word":"speech","pos":"名詞","meaning_ja":["スピーチ","演説"],"example_en":"I made a speech in English.","example_ja":"英語でスピーチをしました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":167,"word":"contest","pos":"名詞","meaning_ja":["コンテスト","競技会"],"example_en":"She won first prize in the contest.","example_ja":"彼女はコンテストで1等賞をとりました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":168,"word":"tournament","pos":"名詞","meaning_ja":["トーナメント","大会"],"example_en":"Our team played in the city tournament.","example_ja":"私たちのチームは市の大会に出場しました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":169,"word":"member","pos":"名詞","meaning_ja":["一員","メンバー"],"example_en":"He is a member of the soccer team.","example_ja":"彼はサッカー部の一員です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":170,"word":"event","pos":"名詞","meaning_ja":["行事","出来事"],"example_en":"The school festival is a big event.","example_ja":"文化祭は大きな行事です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":171,"word":"festival","pos":"名詞","meaning_ja":["祭り"],"example_en":"We went to the summer festival.","example_ja":"夏祭りに行きました。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":172,"word":"trip","pos":"名詞","meaning_ja":["旅行"],"example_en":"How was your trip to Hokkaido?","example_ja":"北海道旅行はどうでしたか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":173,"word":"plane","pos":"名詞","meaning_ja":["飛行機"],"example_en":"We went to Okinawa by plane.","example_ja":"私たちは飛行機で沖縄に行きました。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":174,"word":"dream","pos":"名詞","meaning_ja":["夢"],"example_en":"My dream is to be a pilot.","example_ja":"私の夢はパイロットになることです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":175,"word":"reason","pos":"名詞","meaning_ja":["理由"],"example_en":"Tell me the reason.","example_ja":"理由を教えてください。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":176,"word":"way","pos":"名詞","meaning_ja":["道","方法"],"example_en":"This is the best way to learn English.","example_ja":"これが英語を学ぶ最もよい方法です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":177,"word":"example","pos":"名詞","meaning_ja":["例"],"example_en":"For example, I like apples and bananas.","example_ja":"たとえば、私はりんごやバナナが好きです。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":178,"word":"earth","pos":"名詞","meaning_ja":["地球"],"example_en":"The earth goes around the sun.","example_ja":"地球は太陽のまわりを回っています。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":179,"word":"nature","pos":"名詞","meaning_ja":["自然"],"example_en":"We enjoyed the beautiful nature of the island.","example_ja":"私たちは島の美しい自然を楽しみました。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":180,"word":"energy","pos":"名詞","meaning_ja":["エネルギー"],"example_en":"We should not waste energy.","example_ja":"エネルギーをむだにすべきではありません。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":181,"word":"health","pos":"名詞","meaning_ja":["健康"],"example_en":"Sleep is important for your health.","example_ja":"睡眠は健康にとって大切です。","level":"標準","topic":"食・健康","aichi_priority":"A"},{"id":182,"word":"peace","pos":"名詞","meaning_ja":["平和"],"example_en":"We hope for world peace.","example_ja":"私たちは世界平和を願っています。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":183,"word":"war","pos":"名詞","meaning_ja":["戦争"],"example_en":"My grandfather told me about the war.","example_ja":"祖父は私に戦争について話してくれました。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":184,"word":"life","pos":"名詞","meaning_ja":["生活","人生","生命"],"example_en":"Life in the city is convenient.","example_ja":"都会の生活は便利です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":185,"word":"job","pos":"名詞","meaning_ja":["仕事"],"example_en":"She found a job at a bank.","example_ja":"彼女は銀行の仕事を見つけました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":186,"word":"word","pos":"名詞","meaning_ja":["単語","言葉"],"example_en":"What does this word mean?","example_ja":"この単語はどういう意味ですか。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":187,"word":"sentence","pos":"名詞","meaning_ja":["文"],"example_en":"Read the first sentence aloud.","example_ja":"最初の文を声に出して読みなさい。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":188,"word":"important","pos":"形容詞","meaning_ja":["重要な","大切な"],"example_en":"It is important to read books.","example_ja":"本を読むことは大切です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":189,"word":"necessary","pos":"形容詞","meaning_ja":["必要な"],"example_en":"Is it necessary to bring lunch?","example_ja":"昼食を持ってくる必要がありますか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":190,"word":"useful","pos":"形容詞","meaning_ja":["役に立つ"],"example_en":"This dictionary is very useful.","example_ja":"この辞書はとても役に立ちます。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":191,"word":"different","pos":"形容詞","meaning_ja":["違う","さまざまな"],"example_en":"My idea is different from yours.","example_ja":"私の考えはあなたのとは違います。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":192,"word":"same","pos":"形容詞","meaning_ja":["同じ"],"example_en":"We are in the same class.","example_ja":"私たちは同じクラスです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":193,"word":"popular","pos":"形容詞","meaning_ja":["人気のある"],"example_en":"This song is popular among young people.","example_ja":"この歌は若い人たちに人気があります。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":194,"word":"kind","pos":"形容詞","meaning_ja":["親切な"],"example_en":"It's very kind of you.","example_ja":"ご親切にどうもありがとう。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":195,"word":"careful","pos":"形容詞","meaning_ja":["注意深い"],"example_en":"Be careful when you cross the street.","example_ja":"通りを渡るときは気をつけて。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":196,"word":"excited","pos":"形容詞","meaning_ja":["わくわくした"],"example_en":"I'm excited about the trip.","example_ja":"旅行にわくわくしています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":197,"word":"exciting","pos":"形容詞","meaning_ja":["わくわくさせる"],"example_en":"The game was very exciting.","example_ja":"その試合はとてもわくわくしました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":198,"word":"surprised","pos":"形容詞","meaning_ja":["驚いた"],"example_en":"I was surprised at the news.","example_ja":"その知らせに驚きました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":199,"word":"afraid","pos":"形容詞","meaning_ja":["恐れて","心配して"],"example_en":"Don't be afraid of making mistakes.","example_ja":"間違えることを恐れないで。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":200,"word":"sure","pos":"形容詞","meaning_ja":["確信して"],"example_en":"I'm sure you'll win.","example_ja":"きっとあなたが勝つと思います。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":201,"word":"special","pos":"形容詞","meaning_ja":["特別な"],"example_en":"Today is a special day for me.","example_ja":"今日は私にとって特別な日です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":202,"word":"convenient","pos":"形容詞","meaning_ja":["便利な"],"example_en":"This bag is convenient for traveling.","example_ja":"このかばんは旅行に便利です。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":203,"word":"traditional","pos":"形容詞","meaning_ja":["伝統的な"],"example_en":"Kabuki is a traditional Japanese art.","example_ja":"歌舞伎は日本の伝統芸能です。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":204,"word":"international","pos":"形容詞","meaning_ja":["国際的な"],"example_en":"Narita is an international airport.","example_ja":"成田は国際空港です。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":205,"word":"foreign","pos":"形容詞","meaning_ja":["外国の"],"example_en":"I want to learn a foreign language.","example_ja":"外国語を学びたいです。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":206,"word":"own","pos":"形容詞","meaning_ja":["自分自身の"],"example_en":"I want my own room.","example_ja":"自分の部屋がほしいです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":207,"word":"quickly","pos":"副詞","meaning_ja":["すばやく"],"example_en":"He finished lunch quickly.","example_ja":"彼はすばやく昼食を終えました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":208,"word":"already","pos":"副詞","meaning_ja":["すでに","もう"],"example_en":"I have already eaten lunch.","example_ja":"私はもう昼食を食べました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":209,"word":"yet","pos":"副詞","meaning_ja":["(否定文で)まだ","(疑問文で)もう"],"example_en":"I haven't finished my homework yet.","example_ja":"まだ宿題を終えていません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":210,"word":"ever","pos":"副詞","meaning_ja":["今までに"],"example_en":"Have you ever been to Kyoto?","example_ja":"京都に行ったことがありますか。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":211,"word":"never","pos":"副詞","meaning_ja":["一度も〜ない","決して〜ない"],"example_en":"I have never seen a panda.","example_ja":"パンダを一度も見たことがありません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":212,"word":"just","pos":"副詞","meaning_ja":["ちょうど","ただ〜だけ"],"example_en":"I have just arrived.","example_ja":"ちょうど着いたところです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":213,"word":"again","pos":"副詞","meaning_ja":["再び","もう一度"],"example_en":"Please say it again.","example_ja":"もう一度言ってください。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":214,"word":"abroad","pos":"副詞","meaning_ja":["外国へ","海外で"],"example_en":"I want to study abroad.","example_ja":"留学したいです。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":215,"word":"someday","pos":"副詞","meaning_ja":["いつか"],"example_en":"I want to visit Canada someday.","example_ja":"いつかカナダを訪れたいです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":216,"word":"maybe","pos":"副詞","meaning_ja":["たぶん","もしかすると"],"example_en":"Maybe he is right.","example_ja":"たぶん彼は正しいでしょう。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":217,"word":"until","pos":"前置詞","meaning_ja":["〜までずっと"],"example_en":"I studied until eleven.","example_ja":"私は11時まで勉強しました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":218,"word":"during","pos":"前置詞","meaning_ja":["〜の間に"],"example_en":"I went to Hawaii during the summer vacation.","example_ja":"夏休みの間にハワイに行きました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":219,"word":"without","pos":"前置詞","meaning_ja":["〜なしで"],"example_en":"We can't live without water.","example_ja":"私たちは水なしでは生きられません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":220,"word":"between","pos":"前置詞","meaning_ja":["(2つ)の間に"],"example_en":"The bank is between the post office and the school.","example_ja":"銀行は郵便局と学校の間にあります。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":221,"word":"among","pos":"前置詞","meaning_ja":["(3つ以上)の間で"],"example_en":"He is popular among his classmates.","example_ja":"彼はクラスメートの間で人気があります。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":222,"word":"since","pos":"前置詞","meaning_ja":["〜以来"],"example_en":"I have lived here since 2015.","example_ja":"私は2015年からここに住んでいます。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":223,"word":"if","pos":"接続詞","meaning_ja":["もし〜なら"],"example_en":"If it rains tomorrow, I'll stay home.","example_ja":"もし明日雨なら家にいます。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":224,"word":"when","pos":"接続詞","meaning_ja":["〜するとき"],"example_en":"When I came home, my mother was cooking.","example_ja":"帰宅したとき、母は料理をしていました。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":225,"word":"though","pos":"接続詞","meaning_ja":["〜だけれども"],"example_en":"Though he was tired, he kept running.","example_ja":"疲れていたけれど、彼は走り続けました。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":226,"word":"must","pos":"助動詞","meaning_ja":["〜しなければならない","〜にちがいない"],"example_en":"You must wash your hands.","example_ja":"手を洗わなければなりません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":227,"word":"should","pos":"助動詞","meaning_ja":["〜すべきだ","〜したほうがよい"],"example_en":"You should go to bed early.","example_ja":"早く寝たほうがいいですよ。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":228,"word":"might","pos":"助動詞","meaning_ja":["〜かもしれない"],"example_en":"It might rain this afternoon.","example_ja":"午後は雨が降るかもしれません。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":229,"word":"something","pos":"代名詞","meaning_ja":["何か"],"example_en":"I want something to drink.","example_ja":"何か飲み物がほしいです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":230,"word":"everyone","pos":"代名詞","meaning_ja":["みんな","だれでも"],"example_en":"Everyone likes him.","example_ja":"みんな彼が好きです。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":231,"word":"each","pos":"代名詞","meaning_ja":["それぞれ"],"example_en":"Each of us has a different dream.","example_ja":"私たちはそれぞれ違う夢を持っています。","level":"標準","topic":"一般","aichi_priority":"B"},{"id":232,"word":"protect","pos":"動詞","meaning_ja":["守る","保護する"],"example_en":"We should protect endangered animals.","example_ja":"絶滅のおそれのある動物を守るべきです。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":233,"word":"reduce","pos":"動詞","meaning_ja":["減らす"],"example_en":"We need to reduce plastic waste.","example_ja":"プラスチックごみを減らす必要があります。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":234,"word":"recycle","pos":"動詞","meaning_ja":["リサイクルする","再利用する"],"example_en":"We recycle cans and bottles.","example_ja":"私たちは缶やびんをリサイクルしています。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":235,"word":"solve","pos":"動詞","meaning_ja":["解決する","解く"],"example_en":"We worked together to solve the problem.","example_ja":"私たちは協力してその問題を解決しました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":236,"word":"develop","pos":"動詞","meaning_ja":["発達させる","開発する"],"example_en":"The company developed a new robot.","example_ja":"その会社は新しいロボットを開発しました。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":237,"word":"improve","pos":"動詞","meaning_ja":["向上させる","改善する"],"example_en":"I want to improve my English.","example_ja":"英語力を向上させたいです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":238,"word":"discover","pos":"動詞","meaning_ja":["発見する"],"example_en":"Who discovered this island?","example_ja":"だれがこの島を発見したのですか。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":239,"word":"invent","pos":"動詞","meaning_ja":["発明する"],"example_en":"The telephone was invented by Bell.","example_ja":"電話はベルによって発明されました。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":240,"word":"communicate","pos":"動詞","meaning_ja":["意思を伝え合う"],"example_en":"We communicate with each other in English.","example_ja":"私たちは英語でお互いに意思を伝え合います。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":241,"word":"respect","pos":"動詞","meaning_ja":["尊敬する","尊重する"],"example_en":"We should respect other cultures.","example_ja":"私たちは他の文化を尊重すべきです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":242,"word":"share","pos":"動詞","meaning_ja":["共有する","分け合う"],"example_en":"Let's share our ideas.","example_ja":"考えを共有しましょう。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":243,"word":"support","pos":"動詞","meaning_ja":["支える","支援する"],"example_en":"My parents always support me.","example_ja":"両親はいつも私を支えてくれます。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":244,"word":"realize","pos":"動詞","meaning_ja":["気づく","実現する"],"example_en":"I realized that I was wrong.","example_ja":"私は自分が間違っていたことに気づきました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":245,"word":"continue","pos":"動詞","meaning_ja":["続ける","続く"],"example_en":"Please continue your story.","example_ja":"話を続けてください。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":246,"word":"increase","pos":"動詞","meaning_ja":["増える","増やす"],"example_en":"The number of foreign tourists is increasing.","example_ja":"外国人観光客の数が増えています。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":247,"word":"produce","pos":"動詞","meaning_ja":["生産する"],"example_en":"This area produces a lot of rice.","example_ja":"この地域はたくさんの米を生産しています。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":248,"word":"prepare","pos":"動詞","meaning_ja":["準備する"],"example_en":"I'm preparing for the exam.","example_ja":"私は試験の準備をしています。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":249,"word":"receive","pos":"動詞","meaning_ja":["受け取る"],"example_en":"I received a letter from my friend.","example_ja":"友人から手紙を受け取りました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":250,"word":"suggest","pos":"動詞","meaning_ja":["提案する"],"example_en":"I suggested a new plan to the class.","example_ja":"私はクラスに新しい計画を提案しました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":251,"word":"express","pos":"動詞","meaning_ja":["表現する"],"example_en":"It is hard to express my feelings in English.","example_ja":"自分の気持ちを英語で表現するのは難しいです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":252,"word":"destroy","pos":"動詞","meaning_ja":["破壊する"],"example_en":"Many forests are being destroyed.","example_ja":"多くの森林が破壊されています。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":253,"word":"exchange","pos":"動詞","meaning_ja":["交換する"],"example_en":"We exchanged e-mail addresses.","example_ja":"私たちはメールアドレスを交換しました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":254,"word":"survive","pos":"動詞","meaning_ja":["生き残る"],"example_en":"Some animals cannot survive in cold places.","example_ja":"寒い場所では生き残れない動物もいます。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":255,"word":"disappear","pos":"動詞","meaning_ja":["消える","姿を消す"],"example_en":"The sun disappeared behind the clouds.","example_ja":"太陽が雲の後ろに隠れました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":256,"word":"encourage","pos":"動詞","meaning_ja":["励ます","勇気づける"],"example_en":"His words encouraged me.","example_ja":"彼の言葉が私を勇気づけてくれました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":257,"word":"technology","pos":"名詞","meaning_ja":["科学技術","テクノロジー"],"example_en":"Technology has changed our lives.","example_ja":"科学技術は私たちの生活を変えました。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":258,"word":"society","pos":"名詞","meaning_ja":["社会"],"example_en":"We live in an aging society.","example_ja":"私たちは高齢化社会に生きています。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":259,"word":"population","pos":"名詞","meaning_ja":["人口"],"example_en":"The population of this town is decreasing.","example_ja":"この町の人口は減っています。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":260,"word":"pollution","pos":"名詞","meaning_ja":["汚染"],"example_en":"Air pollution is a serious problem.","example_ja":"大気汚染は深刻な問題です。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":261,"word":"disaster","pos":"名詞","meaning_ja":["災害"],"example_en":"We should prepare for natural disasters.","example_ja":"私たちは自然災害に備えるべきです。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":262,"word":"resource","pos":"名詞","meaning_ja":["資源"],"example_en":"Japan has few natural resources.","example_ja":"日本には天然資源がほとんどありません。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":263,"word":"government","pos":"名詞","meaning_ja":["政府"],"example_en":"The government made a new law.","example_ja":"政府は新しい法律を作りました。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":264,"word":"community","pos":"名詞","meaning_ja":["地域社会","共同体"],"example_en":"I joined a cleanup activity in my community.","example_ja":"地域の清掃活動に参加しました。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":265,"word":"opinion","pos":"名詞","meaning_ja":["意見"],"example_en":"What is your opinion about this?","example_ja":"これについてあなたの意見は何ですか。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":266,"word":"effort","pos":"名詞","meaning_ja":["努力"],"example_en":"Your effort will be rewarded someday.","example_ja":"あなたの努力はいつか報われるでしょう。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":267,"word":"goal","pos":"名詞","meaning_ja":["目標","ゴール"],"example_en":"My goal is to pass the exam.","example_ja":"私の目標は試験に合格することです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":268,"word":"skill","pos":"名詞","meaning_ja":["技能","技術"],"example_en":"Communication skills are important.","example_ja":"コミュニケーション能力は大切です。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":269,"word":"situation","pos":"名詞","meaning_ja":["状況"],"example_en":"The situation is getting better.","example_ja":"状況はよくなってきています。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":270,"word":"difference","pos":"名詞","meaning_ja":["違い"],"example_en":"What is the difference between these two words?","example_ja":"この2つの単語の違いは何ですか。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":271,"word":"advice","pos":"名詞","meaning_ja":["助言","忠告"],"example_en":"Thank you for your advice.","example_ja":"助言をありがとう。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":272,"word":"attention","pos":"名詞","meaning_ja":["注意"],"example_en":"Please pay attention to the teacher.","example_ja":"先生の話に注意を払いなさい。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":273,"word":"custom","pos":"名詞","meaning_ja":["習慣","慣習"],"example_en":"Bowing is a Japanese custom.","example_ja":"おじぎは日本の習慣です。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":274,"word":"generation","pos":"名詞","meaning_ja":["世代"],"example_en":"We must pass on this tradition to the next generation.","example_ja":"私たちはこの伝統を次の世代に伝えなければなりません。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":275,"word":"product","pos":"名詞","meaning_ja":["製品"],"example_en":"This product is made in Japan.","example_ja":"この製品は日本製です。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":276,"word":"research","pos":"名詞","meaning_ja":["研究","調査"],"example_en":"She is doing research on climate change.","example_ja":"彼女は気候変動について研究しています。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":277,"word":"global","pos":"形容詞","meaning_ja":["地球全体の","世界的な"],"example_en":"Global warming is a big problem.","example_ja":"地球温暖化は大きな問題です。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":278,"word":"serious","pos":"形容詞","meaning_ja":["深刻な","まじめな"],"example_en":"This is a serious problem.","example_ja":"これは深刻な問題です。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":279,"word":"possible","pos":"形容詞","meaning_ja":["可能な"],"example_en":"Is it possible to finish it by tomorrow?","example_ja":"明日までにそれを終えることは可能ですか。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":280,"word":"impossible","pos":"形容詞","meaning_ja":["不可能な"],"example_en":"Nothing is impossible.","example_ja":"不可能なことは何もない。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":281,"word":"local","pos":"形容詞","meaning_ja":["地元の","その地方の"],"example_en":"We bought vegetables from local farmers.","example_ja":"地元の農家から野菜を買いました。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":282,"word":"public","pos":"形容詞","meaning_ja":["公共の"],"example_en":"Please be quiet in public places.","example_ja":"公共の場所では静かにしてください。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":283,"word":"safe","pos":"形容詞","meaning_ja":["安全な"],"example_en":"This area is safe at night.","example_ja":"この地域は夜でも安全です。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":284,"word":"dangerous","pos":"形容詞","meaning_ja":["危険な"],"example_en":"It's dangerous to swim in this river.","example_ja":"この川で泳ぐのは危険です。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":285,"word":"healthy","pos":"形容詞","meaning_ja":["健康な","健康によい"],"example_en":"Eating vegetables is healthy.","example_ja":"野菜を食べることは健康によいです。","level":"発展","topic":"食・健康","aichi_priority":"A"},{"id":286,"word":"natural","pos":"形容詞","meaning_ja":["自然の","当然の"],"example_en":"Natural disasters can happen at any time.","example_ja":"自然災害はいつでも起こり得ます。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":287,"word":"modern","pos":"形容詞","meaning_ja":["現代の","近代的な"],"example_en":"Modern life depends on electricity.","example_ja":"現代の生活は電気に頼っています。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":288,"word":"common","pos":"形容詞","meaning_ja":["共通の","よくある"],"example_en":"This is a common mistake.","example_ja":"これはよくある間違いです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":289,"word":"various","pos":"形容詞","meaning_ja":["さまざまな"],"example_en":"People from various countries came to the event.","example_ja":"さまざまな国の人々がそのイベントに来ました。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":290,"word":"enough","pos":"形容詞","meaning_ja":["十分な"],"example_en":"We don't have enough time.","example_ja":"私たちには十分な時間がありません。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":291,"word":"perhaps","pos":"副詞","meaning_ja":["ひょっとすると","たぶん"],"example_en":"Perhaps she will come later.","example_ja":"ひょっとすると彼女はあとで来るかもしれません。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":292,"word":"actually","pos":"副詞","meaning_ja":["実際に","実は"],"example_en":"Actually, I've never been there.","example_ja":"実は、そこに行ったことがないんです。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":293,"word":"especially","pos":"副詞","meaning_ja":["特に"],"example_en":"I like fruit, especially apples.","example_ja":"私は果物、特にりんごが好きです。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":294,"word":"finally","pos":"副詞","meaning_ja":["ついに","最後に"],"example_en":"We finally reached the goal.","example_ja":"私たちはついに目標に到達しました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":295,"word":"however","pos":"副詞","meaning_ja":["しかしながら"],"example_en":"It was raining. However, the game started on time.","example_ja":"雨が降っていた。しかしながら、試合は時間通りに始まった。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":296,"word":"instead","pos":"副詞","meaning_ja":["その代わりに"],"example_en":"I didn't go out. I stayed home instead.","example_ja":"私は出かけず、代わりに家にいました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":297,"word":"recently","pos":"副詞","meaning_ja":["最近"],"example_en":"I have been busy recently.","example_ja":"最近忙しいです。","level":"発展","topic":"一般","aichi_priority":"B"},{"id":298,"word":"through","pos":"前置詞","meaning_ja":["〜を通して","〜じゅう"],"example_en":"I learned a lot through this experience.","example_ja":"この経験を通して多くを学びました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":299,"word":"against","pos":"前置詞","meaning_ja":["〜に反対して","〜に対して"],"example_en":"Are you for or against the plan?","example_ja":"その計画に賛成ですか、反対ですか。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":300,"word":"although","pos":"接続詞","meaning_ja":["〜だけれども"],"example_en":"Although it was cold, we went swimming.","example_ja":"寒かったけれど、私たちは泳ぎに行きました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":301,"word":"unless","pos":"接続詞","meaning_ja":["〜しない限り"],"example_en":"You will be late unless you hurry.","example_ja":"急がないと遅れますよ。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":302,"word":"whether","pos":"接続詞","meaning_ja":["〜かどうか"],"example_en":"I don't know whether he will come.","example_ja":"彼が来るかどうかわかりません。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":303,"word":"plastic","pos":"名詞","meaning_ja":["プラスチック"],"example_en":"Plastic in the sea is a big problem.","example_ja":"海のプラスチックは大きな問題です。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":304,"word":"garbage","pos":"名詞","meaning_ja":["ごみ"],"example_en":"Please take the garbage out.","example_ja":"ごみを出してください。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":305,"word":"waste","pos":"動詞","meaning_ja":["むだにする"],"example_en":"Don't waste food.","example_ja":"食べ物をむだにしないで。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":306,"word":"forest","pos":"名詞","meaning_ja":["森林"],"example_en":"Many animals live in this forest.","example_ja":"この森には多くの動物がすんでいます。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":307,"word":"climate","pos":"名詞","meaning_ja":["気候"],"example_en":"The climate of Japan is mild.","example_ja":"日本の気候は温暖です。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":308,"word":"temperature","pos":"名詞","meaning_ja":["温度","気温"],"example_en":"The temperature is rising every year.","example_ja":"気温は毎年上がっています。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":309,"word":"electricity","pos":"名詞","meaning_ja":["電気"],"example_en":"We use electricity every day.","example_ja":"私たちは毎日電気を使っています。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":310,"word":"solar","pos":"形容詞","meaning_ja":["太陽の"],"example_en":"Solar power is clean energy.","example_ja":"太陽光発電はクリーンなエネルギーです。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":311,"word":"endangered","pos":"形容詞","meaning_ja":["絶滅の危機にある"],"example_en":"Pandas were once an endangered species.","example_ja":"パンダはかつて絶滅危惧種でした。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":312,"word":"species","pos":"名詞","meaning_ja":["(生物の)種"],"example_en":"Many species live in the rainforest.","example_ja":"多くの種が熱帯雨林に生息しています。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":313,"word":"ocean","pos":"名詞","meaning_ja":["海","大洋"],"example_en":"Whales live in the ocean.","example_ja":"クジラは海にすんでいます。","level":"標準","topic":"環境","aichi_priority":"A"},{"id":314,"word":"fuel","pos":"名詞","meaning_ja":["燃料"],"example_en":"Cars need fuel to run.","example_ja":"車は走るのに燃料が必要です。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":315,"word":"cause","pos":"動詞","meaning_ja":["引き起こす"],"example_en":"The heavy rain caused a flood.","example_ja":"大雨が洪水を引き起こしました。","level":"発展","topic":"環境","aichi_priority":"A"},{"id":316,"word":"robot","pos":"名詞","meaning_ja":["ロボット"],"example_en":"Robots help people in factories.","example_ja":"ロボットは工場で人々を助けています。","level":"基本","topic":"科学技術","aichi_priority":"A"},{"id":317,"word":"computer","pos":"名詞","meaning_ja":["コンピューター"],"example_en":"I use a computer for my homework.","example_ja":"宿題にコンピューターを使います。","level":"基本","topic":"科学技術","aichi_priority":"A"},{"id":318,"word":"smartphone","pos":"名詞","meaning_ja":["スマートフォン"],"example_en":"Many students have smartphones.","example_ja":"多くの生徒がスマートフォンを持っています。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":319,"word":"Internet","pos":"名詞","meaning_ja":["インターネット"],"example_en":"You can find a lot of information on the Internet.","example_ja":"インターネットで多くの情報を見つけられます。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":320,"word":"machine","pos":"名詞","meaning_ja":["機械"],"example_en":"This machine makes paper cups.","example_ja":"この機械は紙コップを作ります。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":321,"word":"scientist","pos":"名詞","meaning_ja":["科学者"],"example_en":"She wants to be a scientist.","example_ja":"彼女は科学者になりたいと思っています。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":322,"word":"experiment","pos":"名詞","meaning_ja":["実験"],"example_en":"We did an experiment in science class.","example_ja":"理科の授業で実験をしました。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":323,"word":"data","pos":"名詞","meaning_ja":["データ"],"example_en":"The data shows that more people use trains.","example_ja":"そのデータは電車を使う人が増えていることを示しています。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":324,"word":"system","pos":"名詞","meaning_ja":["仕組み","制度"],"example_en":"This city has a good bus system.","example_ja":"この市にはよいバスの仕組みがあります。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":325,"word":"space","pos":"名詞","meaning_ja":["宇宙","空間"],"example_en":"I want to travel to space.","example_ja":"宇宙へ旅行したいです。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":326,"word":"industry","pos":"名詞","meaning_ja":["産業","工業"],"example_en":"Aichi is famous for its car industry.","example_ja":"愛知は自動車産業で有名です。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":327,"word":"factory","pos":"名詞","meaning_ja":["工場"],"example_en":"My uncle works in a car factory.","example_ja":"おじは自動車工場で働いています。","level":"標準","topic":"科学技術","aichi_priority":"A"},{"id":328,"word":"create","pos":"動詞","meaning_ja":["創り出す"],"example_en":"He created a new game.","example_ja":"彼は新しいゲームを創りました。","level":"発展","topic":"科学技術","aichi_priority":"A"},{"id":329,"word":"tradition","pos":"名詞","meaning_ja":["伝統"],"example_en":"We should keep our local traditions.","example_ja":"私たちは地域の伝統を守るべきです。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":330,"word":"art","pos":"名詞","meaning_ja":["芸術","美術"],"example_en":"I'm interested in Japanese art.","example_ja":"私は日本の芸術に興味があります。","level":"基本","topic":"文化・社会","aichi_priority":"A"},{"id":331,"word":"craft","pos":"名詞","meaning_ja":["工芸"],"example_en":"Shippo-yaki is a traditional craft in Aichi.","example_ja":"七宝焼は愛知の伝統工芸です。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":332,"word":"tourist","pos":"名詞","meaning_ja":["観光客"],"example_en":"Many tourists visit Nagoya Castle.","example_ja":"多くの観光客が名古屋城を訪れます。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":333,"word":"castle","pos":"名詞","meaning_ja":["城"],"example_en":"Nagoya Castle is famous for its golden shachi.","example_ja":"名古屋城は金のしゃちほこで有名です。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":334,"word":"temple","pos":"名詞","meaning_ja":["寺"],"example_en":"We visited an old temple in Kyoto.","example_ja":"京都の古いお寺を訪れました。","level":"基本","topic":"文化・社会","aichi_priority":"A"},{"id":335,"word":"shrine","pos":"名詞","meaning_ja":["神社"],"example_en":"Many people go to the shrine on New Year's Day.","example_ja":"元日には多くの人が神社に行きます。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":336,"word":"area","pos":"名詞","meaning_ja":["地域","区域"],"example_en":"This area is famous for pottery.","example_ja":"この地域は焼き物で有名です。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":337,"word":"village","pos":"名詞","meaning_ja":["村"],"example_en":"My grandparents live in a small village.","example_ja":"祖父母は小さな村に住んでいます。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":338,"word":"neighbor","pos":"名詞","meaning_ja":["近所の人"],"example_en":"Our neighbors are very kind.","example_ja":"近所の人たちはとても親切です。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":339,"word":"elderly","pos":"形容詞","meaning_ja":["年配の","高齢の"],"example_en":"I helped an elderly woman at the station.","example_ja":"駅で年配の女性を手伝いました。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":340,"word":"foreigner","pos":"名詞","meaning_ja":["外国人"],"example_en":"More foreigners live in Aichi now.","example_ja":"今では愛知に住む外国人が増えています。","level":"標準","topic":"文化・社会","aichi_priority":"A"},{"id":341,"word":"character","pos":"名詞","meaning_ja":["登場人物","文字","性格"],"example_en":"Kanji are Chinese characters.","example_ja":"漢字は中国から来た文字です。","level":"発展","topic":"文化・社会","aichi_priority":"A"},{"id":342,"word":"vegetable","pos":"名詞","meaning_ja":["野菜"],"example_en":"Eat more vegetables.","example_ja":"もっと野菜を食べなさい。","level":"基本","topic":"食・健康","aichi_priority":"A"},{"id":343,"word":"meal","pos":"名詞","meaning_ja":["食事"],"example_en":"We have three meals a day.","example_ja":"私たちは1日に3回食事をとります。","level":"標準","topic":"食・健康","aichi_priority":"A"},{"id":344,"word":"farmer","pos":"名詞","meaning_ja":["農家","農場経営者"],"example_en":"The farmer grows rice and tea.","example_ja":"その農家は米とお茶を育てています。","level":"標準","topic":"食・健康","aichi_priority":"A"},{"id":345,"word":"medicine","pos":"名詞","meaning_ja":["薬","医学"],"example_en":"Take this medicine after meals.","example_ja":"この薬を食後に飲んでください。","level":"標準","topic":"食・健康","aichi_priority":"A"},{"id":346,"word":"sleep","pos":"動詞","meaning_ja":["眠る"],"example_en":"I slept for eight hours last night.","example_ja":"昨夜は8時間眠りました。","level":"基本","topic":"食・健康","aichi_priority":"A"},{"id":347,"word":"result","pos":"名詞","meaning_ja":["結果"],"example_en":"The result of the test was good.","example_ja":"テストの結果はよかったです。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":348,"word":"fact","pos":"名詞","meaning_ja":["事実"],"example_en":"Is it a fact or an opinion?","example_ja":"それは事実ですか、それとも意見ですか。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":349,"word":"point","pos":"名詞","meaning_ja":["要点","点"],"example_en":"That's a good point.","example_ja":"それはいい点ですね。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":350,"word":"graph","pos":"名詞","meaning_ja":["グラフ"],"example_en":"Look at the graph on page 5.","example_ja":"5ページのグラフを見てください。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":351,"word":"percent","pos":"名詞","meaning_ja":["パーセント"],"example_en":"About 30 percent of the students walk to school.","example_ja":"生徒の約30パーセントが歩いて通学しています。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":352,"word":"number","pos":"名詞","meaning_ja":["数","番号"],"example_en":"The number of visitors increased.","example_ja":"訪問者の数が増えました。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":353,"word":"survey","pos":"名詞","meaning_ja":["(アンケート)調査"],"example_en":"We did a survey about our classmates' hobbies.","example_ja":"クラスメートの趣味についてアンケート調査をしました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":354,"word":"compare","pos":"動詞","meaning_ja":["比べる"],"example_en":"Compare these two pictures.","example_ja":"この2枚の絵を比べなさい。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":355,"word":"mean","pos":"動詞","meaning_ja":["意味する"],"example_en":"What does this word mean?","example_ja":"この単語はどういう意味ですか。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":356,"word":"describe","pos":"動詞","meaning_ja":["描写する","説明する"],"example_en":"Can you describe the man you saw?","example_ja":"あなたが見た男性の特徴を説明できますか。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":357,"word":"discuss","pos":"動詞","meaning_ja":["話し合う"],"example_en":"We discussed the plan in class.","example_ja":"私たちはクラスでその計画について話し合いました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":358,"word":"report","pos":"名詞","meaning_ja":["報告","レポート"],"example_en":"I wrote a report about recycling.","example_ja":"リサイクルについてのレポートを書きました。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":359,"word":"main","pos":"形容詞","meaning_ja":["主な"],"example_en":"What is the main idea of this story?","example_ja":"この話の主な考えは何ですか。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":360,"word":"following","pos":"形容詞","meaning_ja":["次の","以下の"],"example_en":"Answer the following questions.","example_ja":"次の質問に答えなさい。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":361,"word":"correct","pos":"形容詞","meaning_ja":["正しい"],"example_en":"Choose the correct answer.","example_ja":"正しい答えを選びなさい。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":362,"word":"true","pos":"形容詞","meaning_ja":["本当の","真実の"],"example_en":"Is the story true?","example_ja":"その話は本当ですか。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":363,"word":"also","pos":"副詞","meaning_ja":["〜もまた"],"example_en":"I also like science.","example_ja":"私は理科も好きです。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":364,"word":"first","pos":"副詞","meaning_ja":["最初に","第一に"],"example_en":"First, wash the vegetables.","example_ja":"まず、野菜を洗います。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":365,"word":"then","pos":"副詞","meaning_ja":["それから","そのとき"],"example_en":"Then, cut them into small pieces.","example_ja":"それから、それらを小さく切ります。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":366,"word":"second","pos":"形容詞","meaning_ja":["2番目の"],"example_en":"This is my second visit to Okinawa.","example_ja":"沖縄に来るのは2回目です。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":367,"word":"so","pos":"接続詞","meaning_ja":["だから"],"example_en":"It was raining, so I took a taxi.","example_ja":"雨が降っていたので、タクシーに乗りました。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":368,"word":"than","pos":"接続詞","meaning_ja":["〜よりも"],"example_en":"He is taller than his father.","example_ja":"彼はお父さんより背が高いです。","level":"基本","topic":"論理","aichi_priority":"A"},{"id":369,"word":"for example","pos":"熟語","meaning_ja":["たとえば"],"example_en":"I like sports, for example, tennis and soccer.","example_ja":"私はスポーツ、たとえばテニスやサッカーが好きです。","level":"標準","topic":"論理","aichi_priority":"A"},{"id":370,"word":"in fact","pos":"熟語","meaning_ja":["実は","実際に"],"example_en":"In fact, I didn't know the answer.","example_ja":"実は、答えを知らなかったのです。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":371,"word":"in addition","pos":"熟語","meaning_ja":["さらに","加えて"],"example_en":"In addition, it is cheap.","example_ja":"さらに、それは安いです。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":372,"word":"as a result","pos":"熟語","meaning_ja":["その結果"],"example_en":"As a result, our team won.","example_ja":"その結果、私たちのチームが勝ちました。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":373,"word":"on the other hand","pos":"熟語","meaning_ja":["一方で"],"example_en":"On the other hand, the city is crowded.","example_ja":"一方で、都会は混雑しています。","level":"発展","topic":"論理","aichi_priority":"A"},{"id":374,"word":"look forward to","pos":"熟語","meaning_ja":["〜を楽しみに待つ"],"example_en":"I'm looking forward to seeing you.","example_ja":"あなたに会えるのを楽しみにしています。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":375,"word":"be interested in","pos":"熟語","meaning_ja":["〜に興味がある"],"example_en":"I'm interested in Japanese history.","example_ja":"私は日本の歴史に興味があります。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":376,"word":"take care of","pos":"熟語","meaning_ja":["〜の世話をする"],"example_en":"I take care of my little sister.","example_ja":"私は妹の世話をしています。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":377,"word":"be good at","pos":"熟語","meaning_ja":["〜が得意だ"],"example_en":"She is good at drawing pictures.","example_ja":"彼女は絵をかくのが得意です。","level":"基本","topic":"会話","aichi_priority":"A"},{"id":378,"word":"a lot of","pos":"熟語","meaning_ja":["たくさんの"],"example_en":"There are a lot of books in the library.","example_ja":"図書館にはたくさんの本があります。","level":"基本","topic":"会話","aichi_priority":"A"},{"id":379,"word":"each other","pos":"熟語","meaning_ja":["お互い"],"example_en":"We help each other.","example_ja":"私たちはお互いに助け合います。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":380,"word":"at first","pos":"熟語","meaning_ja":["最初は"],"example_en":"At first, I couldn't speak English well.","example_ja":"最初は英語をうまく話せませんでした。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":381,"word":"because of","pos":"熟語","meaning_ja":["〜のために","〜が原因で"],"example_en":"The game was stopped because of the rain.","example_ja":"雨のため試合は中止されました。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":382,"word":"thanks to","pos":"熟語","meaning_ja":["〜のおかげで"],"example_en":"Thanks to you, I passed the test.","example_ja":"あなたのおかげでテストに合格しました。","level":"発展","topic":"会話","aichi_priority":"A"},{"id":383,"word":"not only A but also B","pos":"熟語","meaning_ja":["AだけでなくBも"],"example_en":"She speaks not only English but also French.","example_ja":"彼女は英語だけでなくフランス語も話します。","level":"発展","topic":"会話","aichi_priority":"A"},{"id":384,"word":"so that","pos":"熟語","meaning_ja":["〜するために"],"example_en":"I study hard so that I can pass the exam.","example_ja":"試験に合格できるように一生懸命勉強しています。","level":"発展","topic":"会話","aichi_priority":"A"},{"id":385,"word":"too ... to","pos":"熟語","meaning_ja":["あまりに…すぎて〜できない"],"example_en":"I was too tired to walk.","example_ja":"疲れすぎて歩けませんでした。","level":"発展","topic":"会話","aichi_priority":"A"},{"id":386,"word":"help A with B","pos":"熟語","meaning_ja":["AのBを手伝う"],"example_en":"Can you help me with my homework?","example_ja":"宿題を手伝ってくれますか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":387,"word":"Why don't you","pos":"熟語","meaning_ja":["〜してはどうですか"],"example_en":"Why don't you join our club?","example_ja":"私たちのクラブに入ったらどうですか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":388,"word":"How about","pos":"熟語","meaning_ja":["〜はどうですか"],"example_en":"How about going to the movies?","example_ja":"映画に行くのはどうですか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":389,"word":"Shall we","pos":"熟語","meaning_ja":["(一緒に)〜しましょうか"],"example_en":"Shall we go shopping?","example_ja":"買い物に行きましょうか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":390,"word":"Would you like","pos":"熟語","meaning_ja":["〜はいかがですか","〜したいですか"],"example_en":"Would you like some tea?","example_ja":"お茶はいかがですか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":391,"word":"Could you","pos":"熟語","meaning_ja":["〜していただけますか"],"example_en":"Could you open the door?","example_ja":"ドアを開けていただけますか。","level":"標準","topic":"会話","aichi_priority":"A"},{"id":392,"word":"I'm afraid","pos":"熟語","meaning_ja":["残念ながら〜と思う"],"example_en":"I'm afraid I can't come.","example_ja":"残念ながら行けそうにありません。","level":"発展","topic":"会話","aichi_priority":"A"},{"id":393,"word":"What's wrong","pos":"熟語","meaning_ja":["どうしたの"],"example_en":"What's wrong? You look sad.","example_ja":"どうしたの? 悲しそうだね。","level":"標準","topic":"会話","aichi_priority":"A"}];
+
+const LEVELS = ["基本", "標準", "発展"];
+const STORE_KEY = "eitango.v1";
+
+/* ===== 保存 ===== */
+function load(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
+function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+const defaultState = () => ({
+  words: {},        // wordKey -> {seen, correct, wrong, streak, last, known}
+  review: [],       // 復習リスト(wordKey)
+  daily: {},        // "YYYY-MM-DD" -> {answered, correct, cards}
+  settings: { levels: ["基本"], pos: "", count: 20, quizDir: "en2ja", cardFront: "en" },
+  customWords: null // 読み込んだリスト
+});
+let S = Object.assign(defaultState(), load(STORE_KEY, {}));
+S.settings = Object.assign(defaultState().settings, S.settings || {});
+function persist(){ save(STORE_KEY, S); }
+
+let WORDS = normalize(S.customWords || BUILTIN_WORDS);
+
+/* 単語の識別子: 同じ単語でも品詞が違えば別扱い */
+const keyOf = w => w.word + "|" + w.pos;
+const today = () => { const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const meaningText = w => w.meaning_ja.join("、");
+function stat(w){ const k = keyOf(w); return S.words[k] || (S.words[k] = {seen:0, correct:0, wrong:0, streak:0, last:null, known:false}); }
+function dayRec(){ return S.daily[today()] || (S.daily[today()] = {answered:0, correct:0, cards:0}); }
+
+function normalize(list){
+  return list.filter(w => w && w.word).map((w,i) => ({
+    id: w.id ?? i+1,
+    word: String(w.word).trim(),
+    pos: String(w.pos || "").trim(),
+    meaning_ja: Array.isArray(w.meaning_ja) ? w.meaning_ja.map(String) : String(w.meaning_ja || "").split("・").map(s=>s.trim()).filter(Boolean),
+    example_en: w.example_en || "",
+    example_ja: w.example_ja || "",
+    speak: w.speak || "",
+    topic: w.topic || "",
+    aichi_priority: w.aichi_priority || "",
+    level: LEVELS.includes(w.level) ? w.level : "標準"
+  }));
+}
+
+/* ===== CSV 読み込み(BOM・引用符対応) ===== */
+function parseCSV(text){
+  text = text.replace(/^﻿/, "");
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i=0; i<text.length; i++){
+    const c = text[i];
+    if (q){
+      if (c === '"'){ if (text[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else if (c === '"') q = true;
+    else if (c === ","){ row.push(cur); cur = ""; }
+    else if (c === "\n" || c === "\r"){
+      if (c === "\r" && text[i+1] === "\n") i++;
+      row.push(cur); cur = ""; if (row.some(x => x !== "")) rows.push(row); row = [];
+    } else cur += c;
+  }
+  row.push(cur); if (row.some(x => x !== "")) rows.push(row);
+  const head = rows.shift().map(h => h.trim());
+  return rows.map(r => Object.fromEntries(head.map((h,i) => [h, (r[i] ?? "").trim()])));
+}
+
+/* ===== 出題範囲 ===== */
+function pool(){
+  return WORDS.filter(w => S.settings.levels.includes(w.level) && (!S.settings.pos || w.pos === S.settings.pos));
+}
+function shuffle(a){ a = a.slice(); for (let i=a.length-1; i>0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+function takeCount(list){ const n = Number(S.settings.count); return n ? list.slice(0, n) : list; }
+function reviewWords(){ const set = new Set(S.review); return WORDS.filter(w => set.has(keyOf(w))); }
+function addReview(w){ const k = keyOf(w); if (!S.review.includes(k)) S.review.push(k); }
+function removeReview(w){ S.review = S.review.filter(k => k !== keyOf(w)); }
+
+/* ===== 画面切り替え ===== */
+let view = "home";
+const $ = id => document.getElementById(id);
+function show(v){
+  view = v;
+  ["home","cards","quiz","records"].forEach(x => $("view-"+x).classList.toggle("hidden", !(x === v || (v === "review" && x === "quiz"))));
+  document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-current", b.dataset.view === v));
+  if (v === "home") renderHome();
+  if (v === "cards") startCards();
+  if (v === "quiz") startQuiz(false);
+  if (v === "review") startQuiz(true);
+  if (v === "records") renderRecords();
+  window.scrollTo(0,0);
+}
+$("nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(b.dataset.view); });
+document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => show(b.dataset.go)));
+
+/* ===== ホーム ===== */
+function renderHome(){
+  const d = dayRec();
+  const known = WORDS.filter(w => S.words[keyOf(w)]?.known).length;
+  $("homeStats").innerHTML = [
+    ["今日の解答数", d.answered + "問"],
+    ["今日の正答率", d.answered ? Math.round(d.correct / d.answered * 100) + "%" : "—"],
+    ["覚えた単語", known + " / " + WORDS.length],
+    ["復習待ち", S.review.length + "語"],
+    ["連続学習", streakDays() + "日"]
+  ].map(([k,v]) => `<div class="stat"><span class="muted small">${k}</span><b>${v}</b></div>`).join("");
+
+  $("levelChecks").innerHTML = LEVELS.map(l => {
+    const n = WORDS.filter(w => w.level === l).length;
+    return `<label class="chk"><input type="checkbox" value="${l}" ${S.settings.levels.includes(l) ? "checked" : ""}> ${l}(${n}語)</label>`;
+  }).join("");
+  $("levelChecks").querySelectorAll("input").forEach(i => i.addEventListener("change", () => {
+    S.settings.levels = [...$("levelChecks").querySelectorAll("input:checked")].map(x => x.value);
+    persist(); renderRange();
+  }));
+  const posList = [...new Set(WORDS.map(w => w.pos))].filter(Boolean);
+  $("posSelect").innerHTML = `<option value="">すべて</option>` + posList.map(p => `<option ${p === S.settings.pos ? "selected" : ""}>${p}</option>`).join("");
+  $("countSelect").value = String(S.settings.count);
+  $("homeReviewBtn").disabled = S.review.length === 0;
+  $("homeReviewBtn").textContent = `復習する(${S.review.length}語)`;
+  $("dataInfo").textContent = S.customWords
+    ? `読み込んだリストを使用中(${WORDS.length}語)`
+    : `組み込みのリストを使用中(words_v2_aichi、${WORDS.length}語)`;
+  renderRange();
+}
+function renderRange(){
+  const n = pool().length;
+  $("rangeInfo").textContent = n ? `範囲内の単語: ${n}語` : "範囲内の単語がありません。難易度を1つ以上選んでください。";
+}
+$("posSelect").addEventListener("change", e => { S.settings.pos = e.target.value; persist(); renderRange(); });
+$("countSelect").addEventListener("change", e => { S.settings.count = Number(e.target.value); persist(); });
+function streakDays(){
+  let n = 0; const d = new Date();
+  if (!S.daily[today()]?.answered && !S.daily[today()]?.cards) d.setDate(d.getDate()-1);
+  for (;;){
+    const k = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const r = S.daily[k]; if (!r || !(r.answered || r.cards)) break;
+    n++; d.setDate(d.getDate()-1);
+  }
+  return n;
+}
+
+/* 単語リストの読み込み */
+$("fileInput").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const text = await f.text();
+    const raw = f.name.toLowerCase().endsWith(".json") ? JSON.parse(text.replace(/^﻿/, "")) : parseCSV(text);
+    const list = normalize(Array.isArray(raw) ? raw : (raw.words || []));
+    if (!list.length) throw new Error("単語が見つかりません");
+    S.customWords = list; WORDS = list; persist(); renderHome();
+    alertMsg(`${f.name} から ${list.length}語を読み込みました。`);
+  }catch(err){ alertMsg("読み込めませんでした: " + err.message); }
+  e.target.value = "";
+});
+$("resetDataBtn").addEventListener("click", () => { S.customWords = null; WORDS = normalize(BUILTIN_WORDS); persist(); renderHome(); });
+function alertMsg(m){ $("dataInfo").textContent = m; }
+
+/* ===== 発音(ブラウザの読み上げ機能) ===== */
+/* 同じつづりで品詞により発音が変わる語(同綴異音語)の読み上げ用つづり。
+   読み上げ機能は単語だけだと品詞が分からず、live(動詞 /lɪv/)を形容詞の /laɪv/ で読むことがあるため。
+   単語データに speak 項目があればそちらを優先します。 */
+const SPEAK_AS = {
+  "live|動詞": "liv",        "live|形容詞": "lyve",
+  "read|動詞": "reed",
+  "use|動詞": "yooz",        "use|名詞": "yoos",
+  "close|動詞": "kloze",     "close|形容詞": "klohss",
+  "lead|動詞": "leed",
+  "tear|名詞": "teer",
+  "wind|名詞": "winnd",
+  "minute|名詞": "minnit",
+  "house|動詞": "howz",
+  "excuse|名詞": "ex-kyoos",
+  // 動詞と名詞でアクセントの位置が変わる語は、動詞のときだけ to を付けて読ませる
+  "increase|動詞": "to increase", "decrease|動詞": "to decrease",
+  "produce|動詞": "to produce",   "record|動詞": "to record",
+  "present|動詞": "to present",   "object|動詞": "to object",
+  "permit|動詞": "to permit",     "progress|動詞": "to progress",
+  "export|動詞": "to export",     "import|動詞": "to import",
+  "contest|動詞": "to contest",   "survey|動詞": "to survey",
+  "subject|動詞": "to subject",   "project|動詞": "to project",
+  "refuse|名詞": "reffyoos",      "content|形容詞": "con-tent"
+};
+function speakText(w){
+  if (w.speak) return w.speak;
+  if (SPEAK_AS[keyOf(w)]) return SPEAK_AS[keyOf(w)];
+  // 熟語の記号や A / B は読ませない(例: "too ... to" → "too, to")
+  return w.word.replace(/\s*\.\.\.\s*/g, ", ").replace(/\b[AB]\b/g, ",").replace(/\s*,\s*(,\s*)*/g, ", ").replace(/^,\s*|,\s*$/g, "").trim();
+}
+let voices = [];
+function loadVoices(){
+  try{
+    voices = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
+    const sel = $("voiceSelect"); if (!sel) return;
+    sel.innerHTML = `<option value="">自動(英語の声)</option>` + voices.map(v => `<option value="${esc(v.name)}" ${v.name === S.settings.voice ? "selected" : ""}>${esc(v.name)}(${v.lang})</option>`).join("");
+  }catch(e){}
+}
+function pickVoice(){
+  if (S.settings.voice){ const v = voices.find(v => v.name === S.settings.voice); if (v) return v; }
+  // 日本語の声で英語を読まないよう、必ず英語の声を選ぶ(米国英語・自然な声を優先)
+  const score = v => (/en[-_]US/i.test(v.lang) ? 4 : 0) + (/natural|online|google/i.test(v.name) ? 2 : 0) + (v.localService ? 0 : 1);
+  return voices.slice().sort((a,b) => score(b) - score(a))[0] || null;
+}
+function speak(text){
+  try{
+    const u = new SpeechSynthesisUtterance(text); u.lang = "en-US"; u.rate = 0.9;
+    const v = pickVoice(); if (v){ u.voice = v; u.lang = v.lang; }
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+const speakWord = w => speak(speakText(w));
+const speakExample = w => { if (w.example_en) speak(w.example_en); };
+try{ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }catch(e){}
+$("voiceSelect").addEventListener("change", e => { S.settings.voice = e.target.value; persist(); });
+$("voiceTest").addEventListener("click", () => speak("I live in Nagoya. Let's study English together."));
+
+/* ===== 単語カード ===== */
+let cards = [], ci = 0, flipped = false;
+function startCards(){
+  cards = takeCount(shuffle(pool())); ci = 0; flipped = false;
+  $("cardFront").value = S.settings.cardFront;
+  renderCard();
+}
+function renderCard(){
+  const box = $("cardBox");
+  $("cardProg").style.width = cards.length ? (ci / cards.length * 100) + "%" : "0";
+  if (!cards.length){ box.innerHTML = `<p class="muted">範囲内の単語がありません。ホームで難易度を選んでください。</p>`; $("cardCounter").textContent = ""; return; }
+  if (ci >= cards.length){
+    $("cardCounter").textContent = `${cards.length} / ${cards.length}`;
+    box.innerHTML = `<div class="word" style="font-size:28px">おつかれさまでした</div><p class="muted">${cards.length}語を確認しました。<kbd>Enter</kbd> でもう一周、<kbd>Q</kbd> でクイズへ。</p>`;
+    return;
+  }
+  const w = cards[ci], st = S.words[keyOf(w)];
+  $("cardCounter").textContent = `${ci+1} / ${cards.length}` + (st?.known ? " ・ 覚えた" : "") + (S.review.includes(keyOf(w)) ? " ・ 復習リストにあり" : "");
+  const enFront = S.settings.cardFront === "en";
+  const front = enFront
+    ? `<div class="word">${esc(w.word)}</div><div><span class="pos">${esc(w.pos)}</span><span class="lv">${w.level}</span></div>`
+    : `<div class="meaning" style="margin:0">${esc(meaningText(w))}</div><div><span class="pos">${esc(w.pos)}</span><span class="lv">${w.level}</span></div>`;
+  const back = enFront
+    ? `<div class="meaning">${esc(meaningText(w))}</div>`
+    : `<div class="word" style="margin-top:12px">${esc(w.word)}</div>`;
+  box.innerHTML = front + (flipped
+    ? back + (w.example_en ? `<div class="example">${highlight(w.example_en, w.word)}<br><span class="muted">${esc(w.example_ja)}</span></div><div class="row" style="justify-content:center;margin-top:8px"><button class="btn secondary" data-say="word">発音 <kbd>S</kbd></button><button class="btn secondary" data-say="ex">例文を聞く <kbd>E</kbd></button></div>` : "")
+    : `<p class="hint"><kbd>Space</kbd> またはクリックで裏返す</p>`);
+  if (flipped && enFront) speakWord(w);
+}
+function flipCard(){ if (ci < cards.length){ flipped = !flipped; renderCard(); } }
+function nextCard(){ if (ci < cards.length){ ci++; flipped = false; renderCard(); } else startCards(); }
+function prevCard(){ if (ci > 0){ ci--; flipped = false; renderCard(); } }
+function markCard(ok){
+  if (ci >= cards.length) return;
+  const w = cards[ci], st = stat(w);
+  st.seen++; st.known = ok; st.last = today();
+  if (ok) removeReview(w); else addReview(w);
+  dayRec().cards++; persist(); nextCard();
+}
+$("cardBox").addEventListener("click", e => { if (!e.target.closest("[data-say]")) flipCard(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-say]"); if (!b) return;
+  const w = view === "cards" ? cards[ci] : quiz[qi]; if (!w) return;
+  b.dataset.say === "ex" ? speakExample(w) : speakWord(w);
+});
+$("cardFlip").addEventListener("click", flipCard);
+$("cardNext").addEventListener("click", nextCard);
+$("cardPrev").addEventListener("click", prevCard);
+$("cardOk").addEventListener("click", () => markCard(true));
+$("cardNg").addEventListener("click", () => markCard(false));
+$("cardRestart").addEventListener("click", startCards);
+$("cardFront").addEventListener("change", e => { S.settings.cardFront = e.target.value; persist(); flipped = false; renderCard(); });
+
+/* ===== 4択クイズ / 復習 ===== */
+let quiz = [], qi = 0, answered = false, reviewMode = false, score = 0, missed = [], curChoices = [], curDir = "en2ja";
+function startQuiz(isReview){
+  reviewMode = isReview;
+  $("quizTitle").textContent = isReview ? "復習" : "4択クイズ";
+  $("quizDir").value = S.settings.quizDir;
+  quiz = isReview ? shuffle(reviewWords()) : takeCount(shuffle(pool()));
+  qi = 0; score = 0; missed = [];
+  renderQuestion();
+}
+function makeChoices(w, dir){
+  // 同じ品詞から優先して選ぶ。意味が重なる単語は除外。
+  const others = WORDS.filter(x => keyOf(x) !== keyOf(w) && x.word !== w.word && !x.meaning_ja.some(m => w.meaning_ja.includes(m)));
+  const same = shuffle(others.filter(x => x.pos === w.pos)), rest = shuffle(others.filter(x => x.pos !== w.pos));
+  const picks = [];
+  for (const x of same.concat(rest)){
+    const label = dir === "en2ja" ? meaningText(x) : x.word;
+    if (!picks.some(p => p.label === label)) picks.push({w:x, label});
+    if (picks.length === 3) break;
+  }
+  return shuffle([{w, label: dir === "en2ja" ? meaningText(w) : w.word, ok:true}, ...picks]);
+}
+function renderQuestion(){
+  const box = $("quizBox");
+  $("quizProg").style.width = quiz.length ? (qi / quiz.length * 100) + "%" : "0";
+  if (!quiz.length){
+    box.innerHTML = reviewMode
+      ? `<p>復習リストは空です。クイズで間違えた単語や、単語カードで「まだ」にした単語がここに入ります。</p>`
+      : `<p class="muted">範囲内の単語がありません。ホームで難易度を選んでください。</p>`;
+    $("quizCounter").textContent = ""; return;
+  }
+  if (qi >= quiz.length) return renderResult();
+  answered = false;
+  const w = quiz[qi];
+  curDir = S.settings.quizDir === "mix" ? (Math.random() < .5 ? "en2ja" : "ja2en") : S.settings.quizDir;
+  curChoices = makeChoices(w, curDir);
+  $("quizCounter").textContent = `${qi+1} / ${quiz.length}  ・  正解 ${score}`;
+  const prompt = curDir === "en2ja"
+    ? `<div class="word">${esc(w.word)}</div><p class="muted" style="margin:0">この単語の意味は?</p>`
+    : `<div class="meaning" style="margin:0">${esc(meaningText(w))}</div><p class="muted" style="margin:0">この意味の英単語は?</p>`;
+  box.innerHTML = `<div style="text-align:center">${prompt}<div><span class="pos">${esc(w.pos)}</span><span class="lv">${w.level}</span></div></div>
+    <div class="choices">${curChoices.map((c,i) => `<button class="choice" data-i="${i}"><kbd class="n">${i+1}</kbd><span>${esc(c.label)}</span></button>`).join("")}</div>
+    <div class="feedback" id="fb"></div><div id="after"></div>`;
+  box.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => answer(Number(b.dataset.i))));
+  if (curDir === "en2ja") speakWord(w);
+}
+function answer(i){
+  if (answered || qi >= quiz.length) return;
+  answered = true;
+  const w = quiz[qi], ok = !!curChoices[i]?.ok, st = stat(w), d = dayRec();
+  st.seen++; st.last = today(); d.answered++;
+  if (ok){
+    st.correct++; st.streak++; d.correct++; score++;
+    if (reviewMode && st.streak >= 2) removeReview(w);   // 復習で2回続けて正解したらリストから外す
+  } else {
+    st.wrong++; st.streak = 0; st.known = false; addReview(w); missed.push(w);
+  }
+  persist();
+  document.querySelectorAll(".choice").forEach((b,j) => {
+    b.disabled = true;
+    if (curChoices[j].ok) b.classList.add("correct"); else if (j === i) b.classList.add("wrong");
+  });
+  const fb = $("fb");
+  fb.className = "feedback " + (ok ? "ok" : "ng");
+  fb.textContent = ok ? "正解!" + (reviewMode && st.streak >= 2 ? " 復習リストから外しました。" : "") : `不正解。正解は「${curDir === "en2ja" ? meaningText(w) : w.word}」`;
+  $("after").innerHTML = `<div class="example" style="text-align:left;border-top:1px solid var(--line);padding-top:12px">
+      <b>${esc(w.word)}</b> <span class="pos">${esc(w.pos)}</span> ${esc(meaningText(w))}<br>
+      ${w.example_en ? highlight(w.example_en, w.word) + "<br><span class='muted'>" + esc(w.example_ja) + "</span>" : ""}</div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn secondary" data-say="word">発音 <kbd>S</kbd></button><button class="btn secondary" data-say="ex">例文を聞く <kbd>E</kbd></button><button class="btn" id="nextQ">次へ <kbd>Enter</kbd></button></div>`;
+  $("nextQ").addEventListener("click", nextQuestion);
+  $("nextQ").focus();
+}
+function nextQuestion(){ if (answered){ qi++; renderQuestion(); } }
+function renderResult(){
+  $("quizCounter").textContent = `${quiz.length} / ${quiz.length}`;
+  const pct = Math.round(score / quiz.length * 100);
+  $("quizBox").innerHTML = `<h2>結果: ${score} / ${quiz.length}(${pct}%)</h2>
+    ${missed.length ? `<h3>間違えた単語(復習リストに追加しました)</h3><table>${missed.map(w => `<tr><td><b>${esc(w.word)}</b></td><td>${esc(w.pos)}</td><td>${esc(meaningText(w))}</td></tr>`).join("")}</table>` : `<p>全問正解です!</p>`}
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="againBtn">もう一度 <kbd>Enter</kbd></button>
+      ${S.review.length ? `<button class="btn secondary" id="toReview">復習する(${S.review.length}語)</button>` : ""}
+    </div>`;
+  $("againBtn").addEventListener("click", () => startQuiz(reviewMode));
+  $("toReview")?.addEventListener("click", () => show("review"));
+}
+$("quizDir").addEventListener("change", e => { S.settings.quizDir = e.target.value; persist(); if (!answered) renderQuestion(); });
+
+/* ===== 学習記録 ===== */
+function renderRecords(){
+  const all = Object.values(S.words);
+  const ans = all.reduce((a,s) => a + s.correct + s.wrong, 0), cor = all.reduce((a,s) => a + s.correct, 0);
+  $("recStats").innerHTML = [
+    ["累計の解答数", ans + "問"],
+    ["累計の正答率", ans ? Math.round(cor/ans*100) + "%" : "—"],
+    ["学習した単語", WORDS.filter(w => S.words[keyOf(w)]?.seen).length + " / " + WORDS.length],
+    ["連続学習", streakDays() + "日"]
+  ].map(([k,v]) => `<div class="stat"><span class="muted small">${k}</span><b>${v}</b></div>`).join("");
+
+  const days = []; const d = new Date(); d.setDate(d.getDate()-13);
+  for (let i=0; i<14; i++){ const k = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); days.push([k, S.daily[k]?.answered || 0]); d.setDate(d.getDate()+1); }
+  const max = Math.max(1, ...days.map(x => x[1]));
+  $("recBars").innerHTML = days.map(([k,n]) => `<div title="${k}: ${n}問" style="height:${n/max*100}%"></div>`).join("");
+  $("recBarLabels").innerHTML = days.map(([k]) => `<span>${Number(k.slice(8))}</span>`).join("");
+
+  $("recLevels").innerHTML = `<tr><th>難易度</th><th>単語数</th><th>学習済み</th><th>覚えた</th><th>正答率</th></tr>` + LEVELS.map(l => {
+    const ws = WORDS.filter(w => w.level === l), ss = ws.map(w => S.words[keyOf(w)]).filter(Boolean);
+    const a = ss.reduce((x,s) => x + s.correct + s.wrong, 0), c = ss.reduce((x,s) => x + s.correct, 0);
+    return `<tr><td>${l}</td><td>${ws.length}</td><td>${ss.filter(s => s.seen).length}</td><td>${ss.filter(s => s.known).length}</td><td>${a ? Math.round(c/a*100) + "%" : "—"}</td></tr>`;
+  }).join("");
+
+  const weak = WORDS.map(w => [w, S.words[keyOf(w)]]).filter(([,s]) => s && s.wrong).sort((a,b) => b[1].wrong - a[1].wrong).slice(0, 15);
+  $("recWeak").innerHTML = weak.length
+    ? `<tr><th>単語</th><th>意味</th><th>間違い</th><th>正解</th></tr>` + weak.map(([w,s]) => `<tr><td><b>${esc(w.word)}</b> <span class="pos">${esc(w.pos)}</span></td><td>${esc(meaningText(w))}</td><td>${s.wrong}</td><td>${s.correct}</td></tr>`).join("")
+    : `<tr><td class="muted">まだ間違えた単語はありません。</td></tr>`;
+}
+$("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({exported: new Date().toISOString(), words: S.words, review: S.review, daily: S.daily}, null, 2)], {type: "application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "eitango-record-" + today() + ".json"; a.click();
+});
+$("clearBtn").addEventListener("click", () => {
+  if (!confirm("学習記録をすべて消します。よろしいですか?")) return;
+  S.words = {}; S.review = []; S.daily = {}; persist(); renderRecords();
+});
+
+/* ===== キーボード ===== */
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  const nav = {h:"home", c:"cards", q:"quiz", r:"review", l:"records"};
+  if (view === "cards"){
+    if (k === " "){ e.preventDefault(); flipCard(); return; }
+    if (k === "arrowright"){ nextCard(); return; }
+    if (k === "arrowleft"){ prevCard(); return; }
+    if (k === "k"){ markCard(true); return; }
+    if (k === "j"){ markCard(false); return; }
+    if (k === "s" && cards[ci]){ speakWord(cards[ci]); return; }
+    if (k === "e" && cards[ci] && flipped){ speakExample(cards[ci]); return; }
+    if (k === "enter" && ci >= cards.length){ startCards(); return; }
+  }
+  if (view === "quiz" || view === "review"){
+    if (["1","2","3","4"].includes(k)){ answer(Number(k) - 1); return; }
+    if (k === "enter"){
+      e.preventDefault();
+      if (qi >= quiz.length && quiz.length) startQuiz(reviewMode); else nextQuestion();
+      return;
+    }
+    if (k === "s" && quiz[qi]){ speakWord(quiz[qi]); return; }
+    if (k === "e" && quiz[qi] && answered){ speakExample(quiz[qi]); return; }
+  }
+  if (nav[k]){ show(nav[k]); }
+});
+
+/* ===== ユーティリティ ===== */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function highlight(sentence, word){
+  const stem = word.replace(/e$/, "").replace(/y$/, "");
+  const re = new RegExp("\\b(" + stem.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\w*)", "i");
+  return esc(sentence).replace(re, "<b>$1</b>");
+}
+
+show("home");
+</script>
+<script src="ios.js"></script>
+</body>
+</html>

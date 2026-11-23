@@ -1,0 +1,27 @@
+{
+  "name": "英文法トレーニング",
+  "short_name": "英文法",
+  "lang": "ja",
+  "start_url": "./bunpou.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#1d7a46",
+  "icons": [
+    {
+      "src": "icons/bunpou-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/bunpou-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/bunpou-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

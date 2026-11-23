@@ -1,0 +1,67 @@
+/* iPad・iPhone 用の上書きスタイル(パソコン版の見た目はそのまま、タッチと小さい画面に合わせる) */
+html{-webkit-text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent}
+button,.btn,.choice,.tile,nav button,label.chk,.unit,.card{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+select{font-size:16px} /* 16px 未満だと iOS がタップ時に画面を拡大してしまう */
+header{padding-left:max(24px,env(safe-area-inset-left));padding-right:max(24px,env(safe-area-inset-right));padding-top:max(12px,env(safe-area-inset-top))}
+main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.panel{overflow-x:auto}
+#cardBox{touch-action:pan-y}
+
+/* タッチ操作のとき(キーボードを押すと自動でキー表示に戻る) */
+[data-input="touch"] kbd{display:none}
+[data-input="touch"] .ios-keys-panel{display:none}
+[data-input="touch"] .btn{min-height:44px}
+[data-input="touch"] .btn.mini{min-height:38px}
+[data-input="touch"] nav button{min-height:40px}
+[data-input="touch"] .choice{min-height:54px}
+[data-input="touch"] .tile{min-height:48px}
+[data-input="touch"] .slot .placed{min-height:34px;padding:2px 10px}
+[data-input="touch"] label.chk{min-height:40px}
+[data-input="touch"] .unit{min-height:48px}
+@media (hover:none){
+  .choice:hover:not(:disabled),.tile:hover:not(:disabled){border-color:var(--line)}
+  nav button:hover{background:none}
+  nav button[aria-current="true"]:hover{background:var(--chip)}
+}
+.btn:active:not(:disabled),.choice:active:not(:disabled),.tile:active:not(:disabled){transform:scale(.97)}
+.card.ios-swipe-l{animation:iosL .18s ease-out}
+.card.ios-swipe-r{animation:iosR .18s ease-out}
+@keyframes iosL{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes iosR{from{transform:translateX(-24px);opacity:.4}to{transform:none;opacity:1}}
+
+/* iPhone 向けの案内パネル */
+.ios-guide p{margin:6px 0}
+.ios-guide .row{margin-top:8px}
+.ios-banner{position:relative;padding-right:44px}
+.ios-banner .ios-close{position:absolute;top:6px;right:6px;width:36px;height:36px;border:none;background:none;color:var(--muted);font-size:22px;cursor:pointer}
+.ios-share{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.15em}
+[data-input="keys"] .ios-touch-only{display:none}
+
+/* iPhone(幅600px以下): メニューを画面の下に固定 */
+@media (max-width:600px){
+  header{padding:8px 16px;padding-top:max(8px,env(safe-area-inset-top));gap:8px}
+  header h1{font-size:16px;margin:0}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:var(--panel);border-top:1px solid var(--line);
+      padding:4px max(4px,env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))}
+  nav button{font-size:11.5px;padding:6px 2px;min-height:48px;line-height:1.25;white-space:normal;word-break:keep-all}
+  nav kbd{display:none}
+  main{padding:12px max(12px,env(safe-area-inset-right)) calc(88px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+  .panel{padding:14px;border-radius:10px;margin-bottom:12px}
+  h2{font-size:18px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat{padding:10px}
+  .stat b{font-size:20px}
+  .card{min-height:220px}
+  .word{font-size:34px}
+  .meaning{font-size:22px}
+  .dialog{font-size:17px}
+  .card-actions{display:grid!important;grid-template-columns:repeat(6,1fr);gap:8px}
+  .card-actions .btn{padding:10px 4px}
+  .card-actions #cardNg,.card-actions #cardOk{grid-row:1;grid-column:span 3;min-height:52px;font-size:17px}
+  .card-actions #cardPrev,.card-actions #cardFlip,.card-actions #cardNext{grid-row:2;grid-column:span 2}
+  table{font-size:13px}
+  #view-cards .panel:first-child .btn,#view-quiz .panel:first-child .btn{min-height:36px;padding:6px 12px;font-size:14px}
+  #view-cards .panel:first-child h2,#view-quiz .panel:first-child h2{font-size:17px}
+  #view-cards .progress,#view-quiz .progress{margin:8px 0}
+}

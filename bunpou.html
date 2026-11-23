@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="ja" data-app="bunpou">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>英文法トレーニング</title>
+<style>
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --ink:#1f2328; --muted:#646b73; --line:#dcdad3;
+  --accent:#2f5bd3; --accent-ink:#ffffff; --ok:#1d7a46; --ok-bg:#e3f3ea; --ng:#b42318; --ng-bg:#fbe7e5;
+  --chip:#eeece6; --kbd:#f0efea; --slot:#eef2fd;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17191c; --panel:#202328; --ink:#e8e9eb; --muted:#9aa1a9; --line:#363a41;
+    --accent:#7d9cf0; --accent-ink:#0f1320; --ok:#5fc48a; --ok-bg:#1d3326; --ng:#f2867b; --ng-bg:#3a2220;
+    --chip:#2b2f35; --kbd:#2b2f35; --slot:#232a3b;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif;line-height:1.6}
+header{display:flex;align-items:center;gap:16px;padding:12px 24px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header h1{font-size:18px;margin:0 12px 0 0}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--ink);padding:6px 12px;border-radius:8px;font:inherit;cursor:pointer}
+nav button[aria-current="true"]{background:var(--chip);border-color:var(--line);font-weight:600}
+nav button:hover{background:var(--chip)}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 12px}
+h3{font-size:16px;margin:16px 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--accent);color:var(--accent-ink);border:none;padding:10px 18px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
+.btn.secondary{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.btn.mini{padding:4px 10px;font-size:13px;font-weight:500}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,nav button:focus-visible,.choice:focus-visible,.tile:focus-visible,select:focus-visible,label.chk:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+kbd{background:var(--kbd);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 6px;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:24px}
+label.chk{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--chip);cursor:pointer}
+select{font:inherit;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.unit{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel)}
+.unit:focus-within{outline:3px solid var(--accent);outline-offset:1px}
+.unit.on{background:var(--slot);border-color:var(--accent)}
+.unit .nm{flex:1}
+.unit .acc{font-size:12px;color:var(--muted);white-space:nowrap}
+.grade{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--muted);margin-right:4px}
+.progress{height:6px;background:var(--chip);border-radius:999px;overflow:hidden;margin:8px 0 16px}
+.progress>i{display:block;height:100%;background:var(--accent)}
+.instr{font-size:14px;color:var(--muted);margin:6px 0 14px}
+.dialog{font-size:19px;line-height:1.9}
+.dialog .line{display:flex;gap:10px}
+.dialog .spk{flex:none;font-weight:700;color:var(--muted);width:1.6em}
+.blank{display:inline-block;min-width:5.5em;border-bottom:2px solid var(--ink);text-align:center;padding:0 6px;margin:0 2px}
+.blank.filled{border-color:var(--ok);color:var(--ok);font-weight:700}
+.slot{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:8em;min-height:2.2em;padding:3px 8px;margin:0 2px;border:2px dashed var(--accent);border-radius:8px;background:var(--slot);vertical-align:middle}
+.slot .placed{font:inherit;font-size:18px;padding:0 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.slot.ok{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.slot.ng{border-style:solid;border-color:var(--ng);background:var(--ng-bg)}
+.u{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
+.u sup{font-size:11px;font-weight:700;color:var(--accent);margin-left:1px}
+.u.correct{background:var(--ok-bg);color:var(--ok)}
+.u.wrong{background:var(--ng-bg);color:var(--ng)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+@media (max-width:560px){.choices{grid-template-columns:1fr}.dialog{font-size:17px}}
+.choice{display:flex;gap:10px;align-items:center;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-size:17px;cursor:pointer}
+.choice:hover:not(:disabled){border-color:var(--accent)}
+.choice .n{flex:none}
+.choice.correct{background:var(--ok-bg);border-color:var(--ok)}
+.choice.wrong{background:var(--ng-bg);border-color:var(--ng)}
+.tiles{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.tile{display:inline-flex;gap:8px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-size:18px;cursor:pointer}
+.tile:hover:not(:disabled){border-color:var(--accent)}
+.tile:disabled{opacity:.3;cursor:default}
+.feedback{margin-top:14px;font-weight:600;min-height:1.6em}
+.feedback.ok{color:var(--ok)} .feedback.ng{color:var(--ng)}
+.explain{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.explain .ans{font-size:17px;margin-bottom:6px}
+.explain p{margin:4px 0}
+.points{margin:6px 0 0;padding-left:1.2em}
+.points li{margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.hint{font-size:13px;color:var(--muted);margin-top:12px}
+.hidden{display:none!important}
+.bar{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px}
+.bar div{flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.bar-labels{display:flex;gap:4px;font-size:11px;color:var(--muted)}
+.bar-labels span{flex:1;text-align:center}
+.meter{display:inline-block;width:80px;height:6px;background:var(--chip);border-radius:999px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.meter i{display:block;height:100%;background:var(--accent)}
+</style>
+<!-- iOS版で追加 -->
+<link rel="manifest" href="manifest-bunpou.webmanifest">
+<link rel="apple-touch-icon" href="icons/bunpou-180.png">
+<link rel="icon" href="icons/bunpou-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="英文法">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#202328" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="ios.css">
+</head>
+<body>
+<header>
+  <h1>英文法トレーニング</h1>
+  <nav id="nav">
+    <button data-view="home">ホーム <kbd>H</kbd></button>
+    <button data-view="points">文法ポイント <kbd>G</kbd></button>
+    <button data-view="quiz">練習 <kbd>Q</kbd></button>
+    <button data-view="review">復習 <kbd>R</kbd></button>
+    <button data-view="records">学習記録 <kbd>L</kbd></button>
+  </nav>
+</header>
+<main>
+
+<!-- ホーム -->
+<section id="view-home">
+  <div class="panel">
+    <h2>今日の学習</h2>
+    <div class="stats" id="homeStats"></div>
+  </div>
+  <div class="panel">
+    <h2>出題範囲</h2>
+    <div class="row small" style="margin-bottom:10px">
+      <span class="muted">まとめて選ぶ:</span>
+      <button class="btn secondary mini" data-grade="中1">中1</button>
+      <button class="btn secondary mini" data-grade="中2">中2</button>
+      <button class="btn secondary mini" data-grade="中3">中3</button>
+      <button class="btn secondary mini" id="selAll">すべて</button>
+      <button class="btn secondary mini" id="selNone">外す</button>
+      <button class="btn secondary mini" id="selWeak">苦手な単元</button>
+    </div>
+    <div class="units" id="unitList"></div>
+    <h3>問題の形式</h3>
+    <div class="row" id="typeChecks"></div>
+    <div class="row" style="margin-top:12px">
+      <label>1回の問題数 <select id="countSelect">
+        <option value="10">10問</option><option value="20">20問</option><option value="30">30問</option><option value="0">範囲の全部</option>
+      </select></label>
+      <label class="chk"><input type="checkbox" id="unseenFirst"> まだ解いていない問題を優先</label>
+    </div>
+    <p class="muted small" id="rangeInfo"></p>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" data-go="quiz">練習を始める</button>
+      <button class="btn secondary" data-go="review" id="homeReviewBtn">復習する</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>キーボード操作</h2>
+    <table class="small">
+      <tr><td><kbd>1</kbd>〜<kbd>4</kbd></td><td>4択・誤り指摘で選ぶ</td></tr>
+      <tr><td><kbd>1</kbd>〜<kbd>9</kbd></td><td>並べかえで語句を順に置く(<kbd>Backspace</kbd> 1つ戻す、<kbd>Esc</kbd> 全部戻す)</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>並べかえの答え合わせ / 次の問題へ</td></tr>
+      <tr><td><kbd>P</kbd></td><td>解説のあとに、その単元の文法ポイントを開く</td></tr>
+      <tr><td><kbd>H</kbd> <kbd>G</kbd> <kbd>Q</kbd> <kbd>R</kbd> <kbd>L</kbd></td><td>画面の切り替え</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <h2>問題データ</h2>
+    <p class="small" id="dataInfo"></p>
+    <div class="row">
+      <button class="btn secondary" id="loadBtn">問題を読み込む(JSON)</button>
+      <input type="file" id="fileInput" accept=".json,application/json" class="hidden">
+      <button class="btn secondary" id="resetDataBtn">組み込みの問題に戻す</button>
+    </div>
+    <p class="hint">JSON の形式は grammar_v1.json と同じです(units と questions)。</p>
+  </div>
+</section>
+
+<!-- 文法ポイント -->
+<section id="view-points" class="hidden">
+  <div class="panel">
+    <h2>文法ポイント</h2>
+    <p class="muted small" style="margin:0">単元ごとの要点です。「この単元を練習」でその単元だけを出題します。</p>
+  </div>
+  <div id="pointList"></div>
+</section>
+
+<!-- 練習 / 復習 -->
+<section id="view-quiz" class="hidden">
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0" id="quizTitle">練習</h2>
+      <span class="muted small" id="quizScope"></span>
+    </div>
+    <div class="progress"><i id="quizProg"></i></div>
+    <div class="muted small" id="quizCounter"></div>
+  </div>
+  <div class="panel" id="quizBox"></div>
+</section>
+
+<!-- 学習記録 -->
+<section id="view-records" class="hidden">
+  <div class="panel">
+    <h2>学習記録</h2>
+    <div class="stats" id="recStats"></div>
+    <h3>この14日間の解答数</h3>
+    <div class="bar" id="recBars"></div>
+    <div class="bar-labels" id="recBarLabels"></div>
+  </div>
+  <div class="panel">
+    <h2>単元別の成績</h2>
+    <table id="recUnits"></table>
+  </div>
+  <div class="panel">
+    <h2>形式別の成績</h2>
+    <table id="recTypes"></table>
+  </div>
+  <div class="panel">
+    <h2>よく間違える問題</h2>
+    <table id="recWeak"></table>
+  </div>
+  <div class="panel">
+    <p class="small muted">記録はこのパソコンのブラウザ内(localStorage)だけに保存されます。別のブラウザやパソコンとは共有されません。</p>
+    <div class="row">
+      <button class="btn secondary" id="exportBtn">記録を書き出す(JSON)</button>
+      <button class="btn secondary" id="clearBtn">記録をすべて消す</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ===== 問題データ(すべて自作) =====
+   units:     { id, name, grade: "中1"|"中2"|"中3", points: [..] }
+   questions: { id, unit, type: "choice"|"order"|"error", q, exp, ja,
+                choice: choices[4](先頭が正解。表示時にシャッフル), answer:0
+                order:  tiles[](正しい順), q の [ ] に入る
+                error:  q の [..] 4か所の下線, answer(0〜3), fix } */
+const BUILTIN = {"name":"高校入試対策 英文法 v1","version":1,"units":[{"id":"u01","name":"be動詞・一般動詞","grade":"中1","points":["主語が I/you/複数 → am/are、he/she/it・単数 → is。","主語が3人称単数で現在の文 → 一般動詞に -s/-es(三単現)。例: She plays tennis.","Do/Does の疑問文・否定文では動詞は原形。例: Does he like tea? / He doesn't like tea.","be動詞と一般動詞は同じ文で並べない。× I am play tennis."]},{"id":"u02","name":"過去形","grade":"中1","points":["一般動詞の過去形: 規則動詞は -ed、不規則動詞は形を覚える(go → went, see → saw)。","疑問文・否定文は Did / didn't + 原形。例: Did you go? / I didn't go.","be動詞の過去: was(I/単数)、were(you/複数)。","yesterday, last ~, ~ ago があれば過去の文の合図。"]},{"id":"u03","name":"進行形","grade":"中1","points":["現在進行形: am/is/are + -ing「(今)~している」。now, Look! が合図。","過去進行形: was/were + -ing「(その時)~していた」。then, at that time, when ~ が合図。","疑問詞の文: What are you doing? / Who are you waiting for?"]},{"id":"u04","name":"未来の表現","grade":"中2","points":["will + 原形: その場で決めたこと・予想。例: I'll help you.","be going to + 原形: 前から決めている予定。例: I'm going to visit Kyoto.","tomorrow, next ~, this weekend が合図。in ten minutes = 10分後に。"]},{"id":"u05","name":"助動詞","grade":"中2","points":["助動詞のあとは必ず原形。× must to go / × can plays","must「~しなければならない」、must not「~してはいけない」、don't have to「~しなくてよい」。","should「~したほうがよい」、May I ~?「~してもいいですか」、Could you ~?「~していただけますか」。","Shall I ~?「(私が)~しましょうか」 Shall we ~?「~しましょうか」。"]},{"id":"u06","name":"比較","grade":"中2","points":["2つを比べる: -er than / more ~ than。3つ以上で一番: the -est / the most ~ (of/in)。","of + 複数を表す語(of the three)、in + 範囲・場所(in my class)。","as + 原級 + as「同じくらい~」。like A better than B / like A the best。","one of the + 最上級 + 複数名詞。比較級を強めるのは much(very は使えない)。"]},{"id":"u07","name":"不定詞(基本)","grade":"中2","points":["名詞的用法「~すること」: I want to be a nurse. / My dream is to study abroad.","副詞的用法「~するために」「~して(感情の原因)」: I went there to buy a book. / I'm happy to see you.","形容詞的用法「~するための・~すべき」: something to eat / a lot of homework to do","to のあとは必ず原形。"]},{"id":"u08","name":"動名詞","grade":"中2","points":["動詞の -ing 形で「~すること」。主語にもなる: Learning English is fun.","enjoy / finish / stop のあとは -ing(to ~ は不可)。","前置詞(at, for, about, of など)のあとは -ing。例: good at drawing / Thank you for helping me.","How about -ing? 「~するのはどうですか」"]},{"id":"u09","name":"受け身","grade":"中2","points":["be動詞 + 過去分詞「~される・~されている」。過去なら was/were。","「~によって」は by ~。be known to ~「~に知られている」は例外。","疑問文は be動詞を前へ: Is English spoken there?"]},{"id":"u10","name":"現在完了","grade":"中3","points":["have/has + 過去分詞。経験「~したことがある」、継続「ずっと~している」、完了「~したところだ」。","継続: for + 期間(for three years)、since + 起点(since 2015)。How long ~? で期間をたずねる。","完了: just, already, yet(否定・疑問)。have been to ~「~へ行ったことがある」。","現在完了進行形 have been -ing「ずっと~し続けている」。","yesterday, last year, ~ ago など過去の一時点を表す語とは一緒に使えない。"]},{"id":"u11","name":"文型(SVOO・SVOC)","grade":"中2","points":["SVOO: give/show/tell/teach + 人 + もの。語順を変えると give A to 人。","SVOC: call A B「AをBと呼ぶ」、name A B「AをBと名づける」、make A B「AをBにする」。","C には形容詞・名詞が入る(副詞は×)。例: The movie made me happy."]},{"id":"u12","name":"接続詞","grade":"中2","points":["when「~するとき」、if「もし~なら」、because「~なので」、though「~だけれど」。","時・条件(when, if)の中では未来のことも現在形: If it rains tomorrow, ...","so「だから」は結果を、because は理由を表す。I think (that) ~。","命令文, and ~「そうすれば」/ 命令文, or ~「さもないと」。"]},{"id":"u13","name":"分詞(名詞を修飾)","grade":"中3","points":["現在分詞 -ing「~している」、過去分詞「~された」。","1語なら名詞の前(a sleeping baby)、2語以上なら名詞の後ろ(the girl talking with Ken)。","修飾される名詞が「する側」なら -ing、「される側」なら過去分詞。"]},{"id":"u14","name":"関係代名詞","grade":"中3","points":["人 → who、もの・動物 → which、どちらにも that。","主格(あとに動詞が続く): a friend who lives in Australia","目的格(あとに主語+動詞が続く): the bag which I bought。目的格は省略できる(the picture you took)。","関係代名詞のあとに、同じものを指す代名詞(it, him など)をもう一度入れない。"]},{"id":"u15","name":"間接疑問文","grade":"中3","points":["疑問文が文の一部になると、疑問詞のあとは「主語 + 動詞」の語順。","Where does she live? → Do you know where she lives?(does は消え、動詞は三単現に)","疑問詞が主語のときはそのまま: Do you know who painted this?"]},{"id":"u16","name":"不定詞の発展","grade":"中3","points":["It is ~ (for 人) to ...「(人が)…することは~だ」。","want/tell/ask + 人 + to ~「人に~してほしい/~するように言う/頼む」。","how to ~「~のしかた」、what to ~「何を~すべきか」。too ~ to ...「~すぎて…できない」。","let/help/make + 人 + 原形「人に~させる/人が~するのを手伝う」(to をつけない)。"]},{"id":"u17","name":"仮定法","grade":"中3","points":["現実と違うことを仮定: If + 主語 + 過去形, 主語 + would/could + 原形。","be動詞は主語に関係なく were が基本: If I were you, ...","I wish + 主語 + 過去形 / could + 原形「~ならいいのに」。"]}],"questions":[{"id":"g001","unit":"u01","type":"choice","q":"A: Is your sister a student?\nB: Yes, she ( ). She goes to Minami Junior High School.","choices":["is","does","am","are"],"answer":0,"exp":"Is ~? の疑問文には be動詞で答えます。主語 she なので is。","ja":"A: お姉さん(妹さん)は学生ですか。B: はい。南中学校に通っています。"},{"id":"g002","unit":"u01","type":"choice","q":"A: Does your father ( ) coffee?\nB: No, he doesn't. He likes tea.","choices":["like","likes","liking","liked"],"answer":0,"exp":"Does を使った疑問文では、動詞は原形にもどします。","ja":"A: お父さんはコーヒーが好きですか。B: いいえ、好きではありません。紅茶が好きです。"},{"id":"g003","unit":"u01","type":"choice","q":"A: My brother ( ) soccer every Sunday.\nB: That's nice. Is he on a team?","choices":["plays","play","playing","is play"],"answer":0,"exp":"主語 my brother は3人称単数、every Sunday で習慣を表す現在の文なので plays。is play のように be動詞と一般動詞は並べません。","ja":"A: 兄(弟)は毎週日曜日にサッカーをします。B: いいね。チームに入っているの？"},{"id":"g004","unit":"u01","type":"choice","q":"A: ( ) you and Ken in the same class?\nB: Yes, we are.","choices":["Are","Is","Do","Does"],"answer":0,"exp":"主語は you and Ken(2人=複数)。答えも we are なので Are。","ja":"A: あなたとケンは同じクラスですか。B: はい、そうです。"},{"id":"g005","unit":"u01","type":"order","q":"A: Does Yuki have any brothers?\nB: No, she [ ]. She has two sisters.","tiles":["doesn't","have","any","brothers"],"exp":"否定文は doesn't + 原形 have。any は否定文で「1人も」の意味。","ja":"A: ユキには兄弟がいますか。B: いいえ、兄弟は1人もいません。姉妹が2人います。"},{"id":"g006","unit":"u01","type":"order","q":"A: [ ] in your bag?\nB: My lunch and a textbook.","tiles":["What","do","you","have"],"exp":"疑問詞 What を文頭に置き、そのあとに do you have の疑問文の語順を続けます。","ja":"A: かばんの中に何を持っていますか。B: お弁当と教科書です。"},{"id":"g007","unit":"u01","type":"error","q":"My sister [likes] music, and she [play] the piano [every] day [after] school.","answer":1,"fix":"play → plays","exp":"主語 she は3人称単数の現在なので plays。","ja":"姉(妹)は音楽が好きで、毎日放課後にピアノをひきます。"},{"id":"g008","unit":"u02","type":"choice","q":"A: What did you do last Sunday?\nB: I ( ) to the library with Tom.","choices":["went","go","gone","going"],"answer":0,"exp":"last Sunday は過去。go の過去形は went(不規則動詞)。","ja":"A: この前の日曜日は何をしましたか。B: トムと図書館に行きました。"},{"id":"g009","unit":"u02","type":"choice","q":"A: ( ) you busy yesterday?\nB: Yes, I was. I had a lot of homework.","choices":["Were","Was","Did","Do"],"answer":0,"exp":"busy は形容詞なので be動詞の文。yesterday で過去、主語 you なので Were。","ja":"A: きのうは忙しかったですか。B: はい。宿題がたくさんありました。"},{"id":"g010","unit":"u02","type":"choice","q":"A: Did Kenta come to the party?\nB: No, he ( ). He was sick.","choices":["didn't","wasn't","doesn't","isn't"],"answer":0,"exp":"Did ~? には did / didn't で答えます。","ja":"A: ケンタはパーティーに来ましたか。B: いいえ。彼は病気でした。"},{"id":"g011","unit":"u02","type":"choice","q":"A: Where ( ) you buy that bag?\nB: I bought it at the station last week.","choices":["did","were","was","are"],"answer":0,"exp":"一般動詞 buy の過去の疑問文なので did。were / was / are のあとに原形 buy は続きません。","ja":"A: そのかばんはどこで買ったの。B: 先週、駅で買ったよ。"},{"id":"g012","unit":"u02","type":"order","q":"A: [ ] yesterday?\nB: I got up at six.","tiles":["What","time","did","you","get","up"],"exp":"What time(何時に)をひとまとまりで文頭へ。そのあと did you + 原形 get up。","ja":"A: きのうは何時に起きましたか。B: 6時に起きました。"},{"id":"g013","unit":"u02","type":"order","q":"A: How was your trip?\nB: Great. We [ ] in Okinawa.","tiles":["had","a","good","time"],"exp":"have a good time「楽しい時を過ごす」の過去形 had a good time。","ja":"A: 旅行はどうだった。B: 最高だったよ。沖縄で楽しく過ごしたよ。"},{"id":"g014","unit":"u02","type":"error","q":"Last year, my family [visit] Kyoto and [saw] many old temples. We [stayed] there [for] three days.","answer":0,"fix":"visit → visited","exp":"Last year があるので過去形 visited。and のあとの saw とも形をそろえます。","ja":"去年、家族は京都を訪れ、たくさんの古いお寺を見ました。そこに3日間滞在しました。"},{"id":"g015","unit":"u03","type":"choice","q":"A: Where is Mom?\nB: She ( ) dinner in the kitchen now.","choices":["is cooking","cooks","cooked","was cooking"],"answer":0,"exp":"now「今」~しているところなので現在進行形 is cooking。","ja":"A: お母さんはどこ。B: 今、台所で夕食を作っているよ。"},{"id":"g016","unit":"u03","type":"choice","q":"A: I called you at eight last night, but you didn't answer.\nB: Sorry. I ( ) a bath then.","choices":["was taking","am taking","take","have taken"],"answer":0,"exp":"then「その時(きのうの8時)」に~していた → 過去進行形 was taking。","ja":"A: 昨夜8時に電話したけど出なかったね。B: ごめん。その時お風呂に入っていたんだ。"},{"id":"g017","unit":"u03","type":"choice","q":"A: ( ) are you doing?\nB: I'm looking for my key.","choices":["What","Where","Which","Who"],"answer":0,"exp":"「何をしているの」とたずねる文。答えが「かぎを探している」なので What。","ja":"A: 何をしているの。B: かぎを探しているんだ。"},{"id":"g018","unit":"u03","type":"choice","q":"A: Look! Some children ( ) in the river.\nB: The water looks cold!","choices":["are swimming","is swimming","swimming","are swim"],"answer":0,"exp":"Look!「見て」は今まさに起きていること → 現在進行形。主語 children は複数なので are swimming。","ja":"A: 見て！子どもたちが川で泳いでいるよ。B: 水が冷たそう！"},{"id":"g019","unit":"u03","type":"order","q":"A: What were you doing when I saw you at the park?\nB: I [ ] with my dog.","tiles":["was","walking","around","the","lake"],"exp":"過去進行形 was walking のあとに場所 around the lake を続けます。","ja":"A: 公園で見かけたとき、何をしていたの。B: 犬と湖のまわりを歩いていたんだ。"},{"id":"g020","unit":"u03","type":"order","q":"A: [ ] for?\nB: I'm waiting for Aya.","tiles":["Who","are","you","waiting"],"exp":"wait for ~「~を待つ」。Who を文頭に出すと for が最後に残ります。","ja":"A: だれを待っているの。B: アヤを待っているんだ。"},{"id":"g021","unit":"u03","type":"error","q":"When I [came] home, my brother [was] [play] a video game [in] his room.","answer":2,"fix":"play → playing","exp":"過去進行形は was + -ing なので playing。","ja":"私が帰宅したとき、弟(兄)は部屋でテレビゲームをしていました。"},{"id":"g022","unit":"u04","type":"choice","q":"A: It's very cloudy.\nB: Yes, it is. It ( ) rain this afternoon.","choices":["will","is","does","was"],"answer":0,"exp":"これからのことの予想なので will + 原形 rain。","ja":"A: すごくくもっているね。B: うん。午後は雨が降るだろうね。"},{"id":"g023","unit":"u04","type":"choice","q":"A: What are you going to do this weekend?\nB: I'm going to ( ) my grandmother.","choices":["visit","visits","visited","visiting"],"answer":0,"exp":"be going to のあとは原形。","ja":"A: 今週末は何をする予定ですか。B: 祖母を訪ねるつもりです。"},{"id":"g024","unit":"u04","type":"choice","q":"A: ( ) you be free tomorrow?\nB: Yes, I will. Why?","choices":["Will","Are","Do","Were"],"answer":0,"exp":"あとに原形 be があり、tomorrow のことをたずねているので Will。","ja":"A: 明日はひま？B: うん、ひまだよ。どうして？"},{"id":"g025","unit":"u04","type":"choice","q":"A: This box is too heavy for me.\nB: OK. I ( ) help you.","choices":["will","am","was","did"],"answer":0,"exp":"その場で「手伝うよ」と決めたことは will で表します。","ja":"A: この箱、重すぎて持てないよ。B: わかった。手伝うよ。"},{"id":"g026","unit":"u04","type":"order","q":"A: [ ] tomorrow?\nB: I'm going to clean my room.","tiles":["What","are","you","going","to","do"],"exp":"答えが be going to の文なので、質問も What are you going to do ~?","ja":"A: 明日は何をする予定？B: 部屋をそうじするつもりだよ。"},{"id":"g027","unit":"u04","type":"order","q":"A: When will the bus come?\nB: It [ ] minutes.","tiles":["will","come","in","ten"],"exp":"in + 時間「(今から)~後に」。","ja":"A: バスはいつ来ますか。B: 10分後に来ます。"},{"id":"g028","unit":"u04","type":"error","q":"Tomorrow, my friends and I [are going] to [went] to the zoo. We [will] [take] a lot of pictures.","answer":1,"fix":"went → go","exp":"be going to のあとは原形。went ではなく go。","ja":"明日、友だちと私は動物園に行く予定です。たくさん写真をとるつもりです。"},{"id":"g029","unit":"u05","type":"choice","q":"A: ( ) I use your pen?\nB: Sure. Here you are.","choices":["May","Am","Was","Have"],"answer":0,"exp":"May I ~?「~してもいいですか」と許可を求める表現。","ja":"A: ペンを使ってもいいですか。B: どうぞ。はい、どうぞ。"},{"id":"g030","unit":"u05","type":"choice","q":"A: Do I have to finish this today?\nB: No, you don't ( ) to. You can do it tomorrow.","choices":["have","must","should","can"],"answer":0,"exp":"Do I have to ~? には No, you don't have to.「その必要はない」で答えます。","ja":"A: これを今日終わらせないといけませんか。B: いいえ、その必要はありません。明日でいいですよ。"},{"id":"g031","unit":"u05","type":"choice","q":"A: You ( ) run in the hallway. It's dangerous.\nB: Sorry.","choices":["must not","don't have to","can","will"],"answer":0,"exp":"It's dangerous. から「走ってはいけない」= 禁止の must not。don't have to は「しなくてよい」で意味が違います。","ja":"A: ろうかを走ってはいけません。危ないですよ。B: すみません。"},{"id":"g032","unit":"u05","type":"choice","q":"A: I have a headache.\nB: You ( ) go to bed early tonight.","choices":["should","can't","mustn't","weren't"],"answer":0,"exp":"相手へのアドバイス「~したほうがいい」は should。","ja":"A: 頭が痛いんだ。B: 今夜は早く寝たほうがいいよ。"},{"id":"g033","unit":"u05","type":"choice","q":"A: It's hot in this room. ( ) I open the window?\nB: Yes, please.","choices":["Shall","Will","Do","Must"],"answer":0,"exp":"Shall I ~?「(私が)~しましょうか」。Yes, please. と答えているのがヒント。","ja":"A: この部屋は暑いね。窓を開けましょうか。B: はい、お願いします。"},{"id":"g034","unit":"u05","type":"order","q":"A: [ ] to the station?\nB: Go straight and turn left at the bank.","tiles":["Could","you","tell","me","the","way"],"exp":"Could you ~?「~していただけますか」。tell + 人 + もの の語順。","ja":"A: 駅への道を教えていただけますか。B: まっすぐ行って、銀行で左に曲がってください。"},{"id":"g035","unit":"u05","type":"order","q":"A: My mother is sick today.\nB: Oh, [ ] dinner?","tiles":["do","you","have","to","cook"],"exp":"have to の疑問文は Do you have to ~?","ja":"A: 今日は母が病気なんだ。B: そう、夕食を作らないといけないの？"},{"id":"g036","unit":"u05","type":"error","q":"You [must] [to] wear a helmet when you [ride] a bike [on] this road.","answer":1,"fix":"to を取る(must wear)","exp":"助動詞 must のあとはすぐに原形。to は入りません。","ja":"この道で自転車に乗るときは、ヘルメットをかぶらなければなりません。"},{"id":"g037","unit":"u06","type":"choice","q":"A: Which is ( ), the Shinano River or the Tone River?\nB: The Shinano River.","choices":["longer","longest","long","more long"],"answer":0,"exp":"2つのうち「どちらが」をたずねるので比較級 longer。","ja":"A: 信濃川と利根川では、どちらが長いですか。B: 信濃川です。"},{"id":"g038","unit":"u06","type":"choice","q":"A: What is the ( ) mountain in Japan?\nB: Mt. Fuji.","choices":["highest","higher","high","most high"],"answer":0,"exp":"in Japan「日本で一番」なので the + 最上級 highest。","ja":"A: 日本で一番高い山は何ですか。B: 富士山です。"},{"id":"g039","unit":"u06","type":"choice","q":"A: Is your bag as ( ) as mine?\nB: No, it isn't. It's smaller.","choices":["big","bigger","biggest","more big"],"answer":0,"exp":"as ~ as の間は原級(もとの形)。","ja":"A: あなたのかばんは私のと同じくらい大きいですか。B: いいえ、そうではありません。もっと小さいです。"},{"id":"g040","unit":"u06","type":"choice","q":"A: Which season do you like the ( )?\nB: I like spring.","choices":["best","better","most good","well"],"answer":0,"exp":"like ~ the best「~が一番好き」。","ja":"A: どの季節が一番好きですか。B: 春が好きです。"},{"id":"g041","unit":"u06","type":"choice","q":"A: I can't answer this question.\nB: Me neither. It's ( ) difficult than the last one.","choices":["more","most","very","as"],"answer":0,"exp":"than があるので比較級。difficult は長い語なので more difficult。","ja":"A: この問題、答えられないよ。B: ぼくも。前の問題より難しいね。"},{"id":"g042","unit":"u06","type":"order","q":"A: Ken runs fast, right?\nB: Yes, he does. He runs [ ] in our class.","tiles":["the","fastest","of","all","the","boys"],"exp":"the + 最上級 fastest、of all the boys「すべての男子の中で」。","ja":"A: ケンは足が速いよね。B: うん。クラスの男子全員の中で一番速いよ。"},{"id":"g043","unit":"u06","type":"order","q":"A: Do you like dogs?\nB: Yes, I do. I like dogs [ ].","tiles":["much","better","than","cats"],"exp":"like A better than B。比較級を強める much は better の前。","ja":"A: 犬は好きですか。B: はい。ねこよりずっと犬が好きです。"},{"id":"g044","unit":"u06","type":"error","q":"This is [one of] the most [famous] [temple] [in] Kyoto.","answer":2,"fix":"temple → temples","exp":"one of the + 最上級 のあとの名詞は複数形。","ja":"これは京都で最も有名なお寺の1つです。"},{"id":"g045","unit":"u07","type":"choice","q":"A: Why did you go to the library?\nB: ( ) some books about space.","choices":["To borrow","Borrow","Borrowing","Borrowed"],"answer":0,"exp":"Why ~? に「~するために」と答える不定詞(副詞的用法)。","ja":"A: どうして図書館に行ったの。B: 宇宙についての本を借りるためだよ。"},{"id":"g046","unit":"u07","type":"choice","q":"A: I'm hungry. Do you have anything ( )?\nB: I have some cookies.","choices":["to eat","eat","eating","ate"],"answer":0,"exp":"anything to eat「何か食べるもの」(形容詞的用法)。","ja":"A: おなかがすいた。何か食べるものある？B: クッキーがあるよ。"},{"id":"g047","unit":"u07","type":"choice","q":"A: What do you want ( ) in the future?\nB: I want to be a nurse.","choices":["to be","be","being","been"],"answer":0,"exp":"want to ~「~したい」。答えの文も want to be。","ja":"A: 将来何になりたいですか。B: 看護師になりたいです。"},{"id":"g048","unit":"u07","type":"choice","q":"A: I was very happy ( ) your letter.\nB: I'm glad to hear that.","choices":["to get","get","got","gets"],"answer":0,"exp":"感情 + to ~「~して(うれしい)」(副詞的用法)。","ja":"A: あなたの手紙を受け取ってとてもうれしかったです。B: それを聞いてうれしいです。"},{"id":"g049","unit":"u07","type":"order","q":"A: Are you free now?\nB: Sorry. I [ ] today.","tiles":["have","a","lot","of","homework","to","do"],"exp":"homework to do「やるべき宿題」。a lot of は名詞の前。","ja":"A: 今ひま？B: ごめん。今日はやらなきゃいけない宿題がたくさんあるんだ。"},{"id":"g050","unit":"u07","type":"order","q":"A: What do you want to do in the future?\nB: My dream [ ] in Australia.","tiles":["is","to","study","English"],"exp":"My dream is to ~「私の夢は~することです」(名詞的用法)。","ja":"A: 将来何をしたいですか。B: 私の夢はオーストラリアで英語を勉強することです。"},{"id":"g051","unit":"u07","type":"error","q":"I [went] to the park [to] [playing] tennis [with] my friends.","answer":2,"fix":"playing → play","exp":"to のあとは原形。to play で「テニスをするために」。","ja":"私は友だちとテニスをするために公園に行きました。"},{"id":"g052","unit":"u08","type":"choice","q":"A: Did you finish ( ) your room?\nB: Yes, I did. It's clean now.","choices":["cleaning","to clean","clean","cleaned"],"answer":0,"exp":"finish のあとは -ing。finish to ~ とは言いません。","ja":"A: 部屋のそうじは終わった？B: うん。もうきれいだよ。"},{"id":"g053","unit":"u08","type":"choice","q":"A: What do you enjoy ( ) in your free time?\nB: I enjoy reading.","choices":["doing","to do","do","did"],"answer":0,"exp":"enjoy のあとは -ing。答えの enjoy reading もヒント。","ja":"A: ひまなときは何をして楽しみますか。B: 読書を楽しみます。"},{"id":"g054","unit":"u08","type":"choice","q":"A: Thank you for ( ) me.\nB: You're welcome.","choices":["helping","help","to help","helped"],"answer":0,"exp":"前置詞 for のあとは -ing。","ja":"A: 手伝ってくれてありがとう。B: どういたしまして。"},{"id":"g055","unit":"u08","type":"choice","q":"A: Kenji is good at ( ) pictures.\nB: Yes, he is. His pictures are beautiful.","choices":["drawing","draw","to draw","draws"],"answer":0,"exp":"be good at -ing「~するのが得意」。前置詞 at のあとは -ing。","ja":"A: ケンジは絵をかくのが得意だね。B: うん。彼の絵はきれいだよ。"},{"id":"g056","unit":"u08","type":"choice","q":"A: ( ) English is fun.\nB: I think so, too.","choices":["Learning","Learn","Learned","Learns"],"answer":0,"exp":"動名詞 Learning English「英語を学ぶこと」が文の主語。","ja":"A: 英語を学ぶのは楽しいね。B: 私もそう思う。"},{"id":"g057","unit":"u08","type":"order","q":"A: How about [ ] this afternoon?\nB: Sounds good.","tiles":["going","to","the","movies"],"exp":"How about -ing?「~するのはどう?」。go to the movies「映画に行く」。","ja":"A: 今日の午後、映画に行くのはどう？B: いいね。"},{"id":"g058","unit":"u08","type":"order","q":"A: What's your hobby?\nB: [ ] is my hobby.","tiles":["Taking","pictures","of","birds"],"exp":"Taking pictures of birds「鳥の写真をとること」がまとまって主語になります。","ja":"A: 趣味は何ですか。B: 鳥の写真をとることが趣味です。"},{"id":"g059","unit":"u08","type":"error","q":"We [enjoyed] [to talk] about our school trip [after] lunch [yesterday].","answer":1,"fix":"to talk → talking","exp":"enjoy のあとは -ing。","ja":"私たちはきのう昼食後に修学旅行の話をして楽しみました。"},{"id":"g060","unit":"u09","type":"choice","q":"A: This temple is very old.\nB: Yes, it is. It ( ) about 800 years ago.","choices":["was built","built","is built","was building"],"answer":0,"exp":"お寺は「建てられた」側なので受け身。ago があるので過去 was built。","ja":"A: このお寺はとても古いね。B: うん。約800年前に建てられたんだ。"},{"id":"g061","unit":"u09","type":"choice","q":"A: What language ( ) in Brazil?\nB: Portuguese.","choices":["is spoken","speaks","is speaking","spoke"],"answer":0,"exp":"言語は「話される」側なので受け身 is spoken。","ja":"A: ブラジルでは何語が話されていますか。B: ポルトガル語です。"},{"id":"g062","unit":"u09","type":"choice","q":"A: Who wrote this book?\nB: It was written ( ) Natsume Soseki.","choices":["by","with","from","at"],"answer":0,"exp":"受け身で「~によって」は by。","ja":"A: この本はだれが書いたの。B: 夏目漱石によって書かれたんだよ。"},{"id":"g063","unit":"u09","type":"choice","q":"A: Mt. Fuji is known ( ) many people around the world.\nB: Yes, it is. It's very famous.","choices":["to","by","for","in"],"answer":0,"exp":"be known to ~「~に知られている」は by ではなく to。","ja":"A: 富士山は世界中の多くの人に知られているね。B: うん。とても有名だね。"},{"id":"g064","unit":"u09","type":"order","q":"A: [ ] in this shop?\nB: Yes, it is. They sell French bread.","tiles":["Is","bread","sold"],"exp":"受け身の疑問文は be動詞を主語の前に: Is bread sold ~?","ja":"A: この店ではパンが売られていますか。B: はい。フランスパンを売っています。"},{"id":"g065","unit":"u09","type":"order","q":"A: Do you know this song?\nB: Of course. This song [ ] young people.","tiles":["is","loved","by","many"],"exp":"is loved by ~「~に愛されている」。many は people の前。","ja":"A: この歌を知っている？B: もちろん。この歌は多くの若者に愛されているよ。"},{"id":"g066","unit":"u09","type":"error","q":"These pictures [were] [took] [by] my uncle when he [was] in Canada.","answer":1,"fix":"took → taken","exp":"受け身は be動詞 + 過去分詞。take の過去分詞は taken。","ja":"これらの写真はおじがカナダにいたときにとられたものです。"},{"id":"g067","unit":"u10","type":"choice","q":"A: Have you ever ( ) to Hokkaido?\nB: Yes, I have. I went there last winter.","choices":["been","gone","went","go"],"answer":0,"exp":"have been to ~「~へ行ったことがある」(経験)。have gone to は「行ってしまって今いない」。","ja":"A: 北海道に行ったことはありますか。B: はい。去年の冬に行きました。"},{"id":"g068","unit":"u10","type":"choice","q":"A: How long have you lived in Nagoya?\nB: I've lived here ( ) 2015.","choices":["since","for","from","in"],"answer":0,"exp":"2015 は始まった時点なので since。期間(three years など)なら for。","ja":"A: 名古屋にどのくらい住んでいますか。B: 2015年からここに住んでいます。"},{"id":"g069","unit":"u10","type":"choice","q":"A: Has the movie started yet?\nB: No, it ( ) started yet.","choices":["hasn't","didn't","isn't","doesn't"],"answer":0,"exp":"Has ~? の現在完了の文なので hasn't + 過去分詞。","ja":"A: 映画はもう始まった？B: いいえ、まだ始まっていないよ。"},{"id":"g070","unit":"u10","type":"choice","q":"A: I ( ) my homework. Can I watch TV now?\nB: Sure.","choices":["have just finished","just finish","have just finish","am just finished"],"answer":0,"exp":"完了「ちょうど~したところ」は have just + 過去分詞。","ja":"A: ちょうど宿題が終わったところ。テレビを見てもいい？B: いいよ。"},{"id":"g071","unit":"u10","type":"choice","q":"A: ( ) have you known Mr. Brown?\nB: For three years.","choices":["How long","How many","When","How often"],"answer":0,"exp":"For three years と期間を答えているので How long。","ja":"A: ブラウン先生とはどのくらいの知り合いですか。B: 3年です。"},{"id":"g072","unit":"u10","type":"choice","q":"A: You look tired.\nB: I've been ( ) for three hours.","choices":["studying","study","studied","to study"],"answer":0,"exp":"現在完了進行形 have been -ing「ずっと~し続けている」。","ja":"A: 疲れているみたいだね。B: 3時間ずっと勉強しているんだ。"},{"id":"g073","unit":"u10","type":"order","q":"A: [ ] this book?\nB: Yes, I have. I've read it twice. It's interesting.","tiles":["Have","you","ever","read"],"exp":"経験をたずねる Have you ever + 過去分詞 ~?(read の過去分詞は read)","ja":"A: この本を読んだことある？B: うん、あるよ。2回読んだよ。おもしろいよ。"},{"id":"g074","unit":"u10","type":"order","q":"A: Do you know Emi well?\nB: Yes, I do. We [ ] we were children.","tiles":["have","been","friends","since"],"exp":"継続 have been friends「ずっと友だちだ」+ since ~「~以来」。","ja":"A: エミのことはよく知っているの？B: うん。子どものころからずっと友だちだよ。"},{"id":"g075","unit":"u10","type":"error","q":"My brother [has] [lived] in Tokyo [since] three years, and he [likes] it.","answer":2,"fix":"since → for","exp":"three years は期間なので for。since は「~以来(起点)」。","ja":"兄(弟)は3年間東京に住んでいて、東京が気に入っています。"},{"id":"g076","unit":"u11","type":"choice","q":"A: What do you call this flower in English?\nB: We call ( ) a sunflower.","choices":["it","its","to it","it's"],"answer":0,"exp":"call A B「AをBと呼ぶ」。A には目的語の形 it。","ja":"A: この花を英語で何と呼びますか。B: sunflower(ひまわり)と呼びます。"},{"id":"g077","unit":"u11","type":"choice","q":"A: How was the movie?\nB: It made me ( ).","choices":["happy","happily","happiness","to happy"],"answer":0,"exp":"make A B「AをBにする」。B には形容詞 happy(副詞 happily は×)。","ja":"A: 映画はどうだった？B: 幸せな気持ちになったよ。"},{"id":"g078","unit":"u11","type":"choice","q":"A: My grandfather gave ( ) this watch.\nB: It's nice.","choices":["me","to me","for me","my"],"answer":0,"exp":"give + 人 + もの。人が先なら to は不要。","ja":"A: 祖父がこの時計をくれたんだ。B: すてきだね。"},{"id":"g079","unit":"u11","type":"choice","q":"A: Could you show your notebook ( ) me?\nB: Sure.","choices":["to","for","at","with"],"answer":0,"exp":"show + もの + to + 人。もの が先なら to が必要。","ja":"A: ノートを見せてもらえる？B: いいよ。"},{"id":"g080","unit":"u11","type":"order","q":"A: Your dog is cute. What's his name?\nB: My brother [ ] Pochi.","tiles":["named","our","dog"],"exp":"name A B「AをBと名づける」。","ja":"A: あなたの犬はかわいいね。名前は何？B: 兄(弟)がうちの犬をポチと名づけたの。"},{"id":"g081","unit":"u11","type":"order","q":"A: Your English teacher is kind, isn't she?\nB: Yes, she is. She [ ] stories.","tiles":["often","tells","us","interesting"],"exp":"tell + 人 + もの。often は一般動詞の前、interesting は stories の前。","ja":"A: 英語の先生はやさしいよね。B: うん。よくおもしろい話をしてくれるよ。"},{"id":"g082","unit":"u11","type":"error","q":"Please [tell] [to me] the way [to] the station. I [want] to go there.","answer":1,"fix":"to me → me","exp":"tell + 人 + もの の語順では to は不要(tell me the way)。","ja":"駅への道を教えてください。そこへ行きたいのです。"},{"id":"g083","unit":"u12","type":"choice","q":"A: Why were you late?\nB: ( ) I missed the bus.","choices":["Because","So","But","If"],"answer":0,"exp":"Why ~? に理由を答えるときは Because。","ja":"A: どうして遅れたの。B: バスに乗り遅れたからです。"},{"id":"g084","unit":"u12","type":"choice","q":"A: ( ) it is sunny tomorrow, let's go fishing.\nB: OK.","choices":["If","Because","But","Or"],"answer":0,"exp":"「もし晴れたら」は If。条件の中なので未来でも is(現在形)。","ja":"A: 明日晴れたら、つりに行こうよ。B: いいよ。"},{"id":"g085","unit":"u12","type":"choice","q":"A: I think ( ) Mr. Sato is a good teacher.\nB: I agree.","choices":["that","what","which","who"],"answer":0,"exp":"I think that ~「~だと思う」。この that は省略してもよい。","ja":"A: 佐藤先生はいい先生だと思うな。B: 賛成。"},{"id":"g086","unit":"u12","type":"choice","q":"A: You went to bed early last night.\nB: Yes, I did. I was very tired, ( ) I went to bed at nine.","choices":["so","because","but","if"],"answer":0,"exp":"「とても疲れていた、だから9時に寝た」と結果を続けるので so。","ja":"A: 昨夜は早く寝たね。B: うん。とても疲れていたから、9時に寝たんだ。"},{"id":"g087","unit":"u12","type":"choice","q":"A: ( ) I was a child, I lived in Okazaki.\nB: Really? I didn't know that.","choices":["When","If","Because","That"],"answer":0,"exp":"「子どものとき」は When。","ja":"A: 子どものころ、岡崎に住んでいたんだ。B: 本当？知らなかった。"},{"id":"g088","unit":"u12","type":"order","q":"A: Hurry up, [ ] the train.\nB: OK, I'm coming!","tiles":["or","you'll","miss"],"exp":"命令文, or ~「~しなさい、さもないと…」。","ja":"A: 急いで、さもないと電車に乗り遅れるよ。B: わかった、今行く！"},{"id":"g089","unit":"u12","type":"order","q":"A: Do you know Ms. Green?\nB: Yes, I do. I [ ] from Canada.","tiles":["know","that","she","is"],"exp":"know that + 主語 + 動詞「~ということを知っている」。","ja":"A: グリーン先生を知っている？B: うん。カナダ出身だって知っているよ。"},{"id":"g090","unit":"u12","type":"error","q":"[If] it [will rain] tomorrow, we [will] [stay] home.","answer":1,"fix":"will rain → rains","exp":"if(条件)や when(時)の中では、未来のことでも現在形を使います。","ja":"もし明日雨が降れば、私たちは家にいます。"},{"id":"g091","unit":"u13","type":"choice","q":"A: Who is the girl ( ) with Ken?\nB: That's his sister.","choices":["talking","talked","talks","to talk"],"answer":0,"exp":"女の子は「話している」側なので現在分詞 talking。with Ken とまとまって後ろから修飾。","ja":"A: ケンと話している女の子はだれ？B: 彼の妹(姉)だよ。"},{"id":"g092","unit":"u13","type":"choice","q":"A: This is a car ( ) in Germany.\nB: It looks expensive.","choices":["made","making","makes","make"],"answer":0,"exp":"車は「作られた」側なので過去分詞 made。","ja":"A: これはドイツで作られた車です。B: 高そうですね。"},{"id":"g093","unit":"u13","type":"choice","q":"A: Look at the ( ) baby.\nB: Oh, let's be quiet.","choices":["sleeping","slept","sleeps","sleep"],"answer":0,"exp":"「眠っている赤ちゃん」。1語の分詞は名詞の前に置きます。","ja":"A: 眠っている赤ちゃんを見て。B: あ、静かにしよう。"},{"id":"g094","unit":"u13","type":"choice","q":"A: I like books ( ) by Murakami Haruki.\nB: Me, too.","choices":["written","writing","wrote","writes"],"answer":0,"exp":"本は「書かれた」側なので過去分詞 written。","ja":"A: 村上春樹によって書かれた本が好きです。B: 私もです。"},{"id":"g095","unit":"u13","type":"order","q":"A: Which is your bike?\nB: [ ] is mine.","tiles":["The","bike","parked","by","the","door"],"exp":"the bike を parked by the door「ドアのそばにとめられた」が後ろから修飾。","ja":"A: どれがあなたの自転車？B: ドアのそばにとめてある自転車が私のです。"},{"id":"g096","unit":"u13","type":"order","q":"A: Do you know the man [ ]?\nB: Yes, I do. He is our new ALT.","tiles":["standing","in","front","of","the","gate"],"exp":"the man を standing in front of the gate「門の前に立っている」が後ろから修飾。","ja":"A: 門の前に立っている男の人を知っている？B: うん。新しいALTの先生だよ。"},{"id":"g097","unit":"u13","type":"error","q":"The language [speaking] in this country [is] French, [but] many people [can] speak English, too.","answer":0,"fix":"speaking → spoken","exp":"言語は「話される」側なので過去分詞 spoken。","ja":"この国で話されている言語はフランス語ですが、多くの人は英語も話せます。"},{"id":"g098","unit":"u14","type":"choice","q":"A: I have a friend ( ) lives in Australia.\nB: Do you write to each other?","choices":["who","which","whose","what"],"answer":0,"exp":"先行詞 a friend は人で、あとに動詞 lives が続くので主格の who。","ja":"A: オーストラリアに住んでいる友だちがいるんだ。B: 手紙のやりとりをしているの？"},{"id":"g099","unit":"u14","type":"choice","q":"A: This is the bag ( ) I bought yesterday.\nB: It looks nice.","choices":["which","who","what","where"],"answer":0,"exp":"先行詞 the bag はもの。あとに I bought(主語+動詞)が続く目的格の which。","ja":"A: これがきのう買ったかばんです。B: すてきですね。"},{"id":"g100","unit":"u14","type":"choice","q":"A: Is this the train ( ) goes to Toyohashi?\nB: Yes, it is.","choices":["that","who","where","what"],"answer":0,"exp":"先行詞 the train はもの。that は人にもものにも使えます。","ja":"A: これは豊橋に行く電車ですか。B: はい、そうです。"},{"id":"g101","unit":"u14","type":"choice","q":"A: The cake ( ) my mother made was delicious.\nB: I want to eat it, too.","choices":["that","who","what","it"],"answer":0,"exp":"先行詞 the cake(もの)+ 目的格の関係代名詞 that。","ja":"A: 母が作ったケーキはおいしかった。B: 私も食べたいな。"},{"id":"g102","unit":"u14","type":"choice","q":"A: Is this the picture ( ) last week?\nB: Yes, it is. I took it in Kyoto.","choices":["you took","you took it","took you","you were taken"],"answer":0,"exp":"目的格の関係代名詞が省略された形(the picture you took)。it をもう一度入れるのは×。","ja":"A: これは先週あなたがとった写真？B: うん。京都でとったんだ。"},{"id":"g103","unit":"u14","type":"order","q":"A: What's that?\nB: It's a robot [ ] the room.","tiles":["which","can","clean"],"exp":"a robot を which can clean the room が後ろから説明します。","ja":"A: あれは何？B: 部屋をそうじできるロボットだよ。"},{"id":"g104","unit":"u14","type":"order","q":"A: Who is Ms. Tanaka?\nB: She is [ ] last year.","tiles":["the","teacher","who","taught","us","English"],"exp":"the teacher(人)+ who + 動詞 taught。teach + 人 + もの の語順。","ja":"A: 田中先生ってだれ？B: 去年私たちに英語を教えてくれた先生だよ。"},{"id":"g105","unit":"u14","type":"error","q":"I know a girl [which] [can] [speak] three languages [well].","answer":0,"fix":"which → who","exp":"先行詞 a girl は人なので who(または that)。","ja":"私は3か国語を上手に話せる女の子を知っています。"},{"id":"g106","unit":"u15","type":"choice","q":"A: Do you know where ( )?\nB: She lives near the station.","choices":["Mika lives","does Mika live","Mika does live","lives Mika"],"answer":0,"exp":"間接疑問文は「疑問詞 + 主語 + 動詞」。does は消え、lives になります。","ja":"A: ミカがどこに住んでいるか知っている？B: 駅の近くに住んでいるよ。"},{"id":"g107","unit":"u15","type":"choice","q":"A: Can you tell me what time ( )?\nB: At 7:30.","choices":["the store opens","does the store open","opens the store","the store open"],"answer":0,"exp":"what time のあとは「主語 + 動詞」。主語 the store は3人称単数なので opens。","ja":"A: その店が何時に開くか教えてくれる？B: 7時30分だよ。"},{"id":"g108","unit":"u15","type":"choice","q":"A: I don't know ( ) this word means.\nB: Let's look it up in the dictionary.","choices":["what","who","where","when"],"answer":0,"exp":"「この単語が何を意味するか」なので what。","ja":"A: この単語がどういう意味かわからない。B: 辞書で調べよう。"},{"id":"g109","unit":"u15","type":"choice","q":"A: Do you know who ( ) this picture?\nB: My sister did.","choices":["painted","did he paint","he painted","painting"],"answer":0,"exp":"疑問詞 who が主語なので、そのまま who + 動詞 painted。","ja":"A: だれがこの絵をかいたか知っている？B: 私の姉(妹)だよ。"},{"id":"g110","unit":"u15","type":"order","q":"A: [ ] he is?\nB: He is twenty.","tiles":["Do","you","know","how","old"],"exp":"Do you know のあとに how old he is(主語+動詞)を続けます。","ja":"A: 彼が何歳か知っている？B: 20歳だよ。"},{"id":"g111","unit":"u15","type":"order","q":"A: When is the English test?\nB: I'm not sure. I'll ask Mr. Kato [ ].","tiles":["when","the","test","will","start"],"exp":"間接疑問文なので when + 主語 the test + will start。when will the test start は×。","ja":"A: 英語のテストはいつ？B: わからない。テストがいつ始まるか加藤先生に聞いてみるよ。"},{"id":"g112","unit":"u15","type":"error","q":"Could you tell me [where] [is] [the] museum? I [want] to go there.","answer":1,"fix":"is を museum の後ろへ(where the museum is)","exp":"間接疑問文では「疑問詞 + 主語 + 動詞」の語順。","ja":"博物館がどこにあるか教えていただけますか。そこへ行きたいのです。"},{"id":"g113","unit":"u16","type":"choice","q":"A: It is important ( ) us to sleep well.\nB: I agree.","choices":["for","of","to","with"],"answer":0,"exp":"It is ~ for 人 to ...「(人が)…することは~だ」。","ja":"A: 私たちにとってよく眠ることは大切だね。B: そう思う。"},{"id":"g114","unit":"u16","type":"choice","q":"A: Why are you cleaning your room?\nB: My mother told me ( ) it.","choices":["to clean","clean","cleaning","cleaned"],"answer":0,"exp":"tell + 人 + to ~「人に~するように言う」。","ja":"A: どうして部屋のそうじをしているの？B: 母にそうじするように言われたんだ。"},{"id":"g115","unit":"u16","type":"choice","q":"A: I don't know how ( ) this machine.\nB: I'll show you.","choices":["to use","use","using","used"],"answer":0,"exp":"how to ~「~のしかた」。","ja":"A: この機械の使い方がわからないよ。B: 教えてあげるよ。"},{"id":"g116","unit":"u16","type":"choice","q":"A: Let me ( ) you.\nB: Thanks. That's very kind of you.","choices":["help","to help","helping","helped"],"answer":0,"exp":"let + 人 + 原形「人に~させる」。to はつけません。","ja":"A: 手伝わせてください。B: ありがとう。ご親切に。"},{"id":"g117","unit":"u16","type":"choice","q":"A: Can you carry this box?\nB: No, I can't. It's too heavy for me ( ).","choices":["to carry","carry","carrying","carried"],"answer":0,"exp":"too ~ to ...「~すぎて…できない」。","ja":"A: この箱を運べる？B: ううん。重すぎて運べないよ。"},{"id":"g118","unit":"u16","type":"order","q":"A: What did your teacher say?\nB: She [ ] harder.","tiles":["wants","us","to","study"],"exp":"want + 人 + to ~「人に~してほしい」。","ja":"A: 先生は何て言ったの？B: 私たちにもっと勉強してほしいって。"},{"id":"g119","unit":"u16","type":"order","q":"A: [ ] English every day.\nB: I know. I try to read a little every day.","tiles":["It","is","important","to","study"],"exp":"It is ~ to ...「…することは~だ」。It が to 以下を指します。","ja":"A: 毎日英語を勉強することが大切だよ。B: わかっている。毎日少し読むようにしているよ。"},{"id":"g120","unit":"u16","type":"error","q":"Ms. Ito [asked] us [cleaning] the classroom [before] we [went] home.","answer":1,"fix":"cleaning → to clean","exp":"ask + 人 + to ~「人に~するように頼む」。","ja":"伊藤先生は私たちに、帰る前に教室をそうじするように頼みました。"},{"id":"g121","unit":"u17","type":"choice","q":"A: I wish I ( ) a dog.\nB: You can't have pets in your apartment, right?","choices":["had","have","has","will have"],"answer":0,"exp":"I wish + 過去形「~ならいいのに(実際はちがう)」。","ja":"A: 犬を飼っていたらいいのに。B: 君のマンションではペットを飼えないんだよね。"},{"id":"g122","unit":"u17","type":"choice","q":"A: I broke my friend's pen. What should I do?\nB: If I ( ) you, I would tell her the truth.","choices":["were","am","will be","be"],"answer":0,"exp":"If I were you「もし私があなたなら」。仮定法では be動詞は were。","ja":"A: 友だちのペンをこわしちゃった。どうしよう。B: 私があなたなら、本当のことを言うよ。"},{"id":"g123","unit":"u17","type":"choice","q":"A: If I had more time, I ( ) travel around the world.\nB: Where would you go first?","choices":["would","will","can","am"],"answer":0,"exp":"If + 過去形, 主語 + would + 原形。","ja":"A: もっと時間があれば、世界中を旅するのに。B: 最初にどこに行く？"},{"id":"g124","unit":"u17","type":"choice","q":"A: I wish I ( ) speak French.\nB: You can learn it. It's not too late.","choices":["could","can","will","am"],"answer":0,"exp":"I wish I could ~「~できたらいいのに」。","ja":"A: フランス語が話せたらいいのに。B: 習えばいいよ。遅すぎることはないよ。"},{"id":"g125","unit":"u17","type":"order","q":"A: Are you going to the concert?\nB: No, I'm not. If [ ], I would go.","tiles":["I","had","a","ticket"],"exp":"If + 主語 + 過去形 ~, I would ...「もし~なら…するのに」。","ja":"A: コンサートに行くの？B: ううん。チケットがあれば行くんだけど。"},{"id":"g126","unit":"u17","type":"order","q":"A: [ ] fly.\nB: Where would you go?","tiles":["I","wish","I","could"],"exp":"I wish I could ~「~できたらいいのに」。","ja":"A: 空を飛べたらいいのに。B: どこに行く？"},{"id":"g127","unit":"u17","type":"error","q":"If I [have] a lot of money, I [would] [buy] a big house [for] my family.","answer":0,"fix":"have → had","exp":"would を使う仮定法なので、If のあとは過去形 had。","ja":"もしお金がたくさんあったら、家族のために大きな家を買うのに。"}]};
+
+const TYPES = { choice: "4択(空所補充)", order: "並べかえ", error: "誤り指摘" };
+const STORE_KEY = "bunpou.v1";
+
+/* ===== 保存 ===== */
+function load(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
+function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+const defaultState = () => ({
+  qs: {},           // questionId -> {seen, correct, wrong, streak, last}
+  review: [],       // 復習リスト(questionId)
+  daily: {},        // "YYYY-MM-DD" -> {answered, correct}
+  settings: { units: null, types: ["choice","order","error"], count: 10, unseenFirst: true },
+  customData: null
+});
+let S = Object.assign(defaultState(), load(STORE_KEY, {}));
+S.settings = Object.assign(defaultState().settings, S.settings || {});
+function persist(){ save(STORE_KEY, S); }
+
+let DATA = validate(S.customData) || BUILTIN;
+let UNITS = DATA.units, QS = DATA.questions;
+const unitOf = id => UNITS.find(u => u.id === id) || {id, name: id, grade: "", points: []};
+if (!Array.isArray(S.settings.units)) S.settings.units = UNITS.filter(u => u.grade === "中1").map(u => u.id);
+
+const today = () => ymd(new Date());
+const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function stat(q){ return S.qs[q.id] || (S.qs[q.id] = {seen:0, correct:0, wrong:0, streak:0, last:null}); }
+function dayRec(){ return S.daily[today()] || (S.daily[today()] = {answered:0, correct:0}); }
+function accOf(list){
+  const ss = list.map(q => S.qs[q.id]).filter(Boolean);
+  const a = ss.reduce((x,s) => x + s.correct + s.wrong, 0), c = ss.reduce((x,s) => x + s.correct, 0);
+  return {answered: a, correct: c, seen: ss.filter(s => s.seen).length, pct: a ? Math.round(c / a * 100) : null};
+}
+
+/* ===== データ読み込みの検査 ===== */
+function validate(d){
+  if (!d) return null;
+  if (Array.isArray(d)) d = {units: [], questions: d};
+  if (!Array.isArray(d.questions)) return null;
+  const units = Array.isArray(d.units) ? d.units.filter(u => u && u.id).map(u => ({id: String(u.id), name: String(u.name || u.id), grade: String(u.grade || ""), points: Array.isArray(u.points) ? u.points.map(String) : []})) : [];
+  const qs = [];
+  d.questions.forEach((q, i) => {
+    if (!q || !q.q || !TYPES[q.type]) return;
+    const x = {id: String(q.id ?? "c" + i), unit: String(q.unit || "other"), type: q.type, q: String(q.q), exp: String(q.exp || ""), ja: String(q.ja || "")};
+    if (q.type === "choice"){
+      if (!Array.isArray(q.choices) || q.choices.length < 2) return;
+      x.choices = q.choices.map(String); x.answer = Number(q.answer) || 0;
+    } else if (q.type === "order"){
+      if (!Array.isArray(q.tiles) || q.tiles.length < 2) return;
+      x.tiles = q.tiles.map(String);
+    } else {
+      if ((x.q.match(/\[[^\]]+\]/g) || []).length < 2) return;
+      x.answer = Number(q.answer) || 0; x.fix = String(q.fix || "");
+    }
+    qs.push(x);
+  });
+  qs.forEach(q => { if (!units.some(u => u.id === q.unit)) units.push({id: q.unit, name: q.unit, grade: "", points: []}); });
+  return qs.length ? {name: String(d.name || "読み込んだ問題"), units, questions: qs} : null;
+}
+
+/* ===== 出題範囲 ===== */
+function pool(){
+  return QS.filter(q => S.settings.units.includes(q.unit) && S.settings.types.includes(q.type));
+}
+function shuffle(a){ a = a.slice(); for (let i=a.length-1; i>0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+function pick(list){
+  let l = shuffle(list);
+  if (S.settings.unseenFirst) l = l.filter(q => !S.qs[q.id]?.seen).concat(l.filter(q => S.qs[q.id]?.seen));
+  const n = Number(S.settings.count);
+  l = n ? l.slice(0, n) : l;
+  return shuffle(l);
+}
+function reviewQs(){ const set = new Set(S.review); return QS.filter(q => set.has(q.id)); }
+function addReview(q){ if (!S.review.includes(q.id)) S.review.push(q.id); }
+function removeReview(q){ S.review = S.review.filter(k => k !== q.id); }
+
+/* ===== 画面切り替え ===== */
+let view = "home";
+const $ = id => document.getElementById(id);
+function show(v, opt){
+  view = v;
+  ["home","points","quiz","records"].forEach(x => $("view-"+x).classList.toggle("hidden", !(x === v || (v === "review" && x === "quiz"))));
+  document.querySelectorAll("#nav button").forEach(b => b.setAttribute("aria-current", b.dataset.view === v));
+  if (v === "home") renderHome();
+  if (v === "points") renderPoints(opt);
+  if (v === "quiz") startQuiz(false, opt);
+  if (v === "review") startQuiz(true);
+  if (v === "records") renderRecords();
+  if (!(v === "points" && opt)) window.scrollTo(0,0);
+}
+$("nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(b.dataset.view); });
+document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => show(b.dataset.go)));
+
+/* ===== ホーム ===== */
+function renderHome(){
+  const d = dayRec(), all = accOf(QS);
+  $("homeStats").innerHTML = [
+    ["今日の解答数", d.answered + "問"],
+    ["今日の正答率", d.answered ? Math.round(d.correct / d.answered * 100) + "%" : "—"],
+    ["解いた問題", all.seen + " / " + QS.length],
+    ["復習待ち", S.review.length + "問"],
+  ].map(([k,v]) => `<div class="stat"><span class="muted small">${k}</span><b>${v}</b></div>`).join("");
+  renderUnitList();
+  $("typeChecks").innerHTML = Object.entries(TYPES).map(([k,v]) =>
+    `<label class="chk"><input type="checkbox" value="${k}" ${S.settings.types.includes(k) ? "checked" : ""}> ${v}</label>`).join("");
+  $("typeChecks").querySelectorAll("input").forEach(c => c.addEventListener("change", () => {
+    S.settings.types = [...$("typeChecks").querySelectorAll("input:checked")].map(x => x.value); persist(); renderRange();
+  }));
+  $("countSelect").value = String(S.settings.count);
+  $("unseenFirst").checked = !!S.settings.unseenFirst;
+  $("homeReviewBtn").textContent = `復習する(${S.review.length}問)`;
+  $("homeReviewBtn").disabled = !S.review.length;
+  $("dataInfo").textContent = `使用中: ${DATA.name || "組み込みの問題"}(${UNITS.length}単元・${QS.length}問)`;
+  renderRange();
+}
+function renderUnitList(){
+  $("unitList").innerHTML = UNITS.map(u => {
+    const qs = QS.filter(q => q.unit === u.id), a = accOf(qs), on = S.settings.units.includes(u.id);
+    return `<label class="unit ${on ? "on" : ""}"><input type="checkbox" value="${esc(u.id)}" ${on ? "checked" : ""}>
+      <span class="nm">${esc(u.name)} ${u.grade ? `<span class="grade">${esc(u.grade)}</span>` : ""}</span>
+      <span class="acc">${a.pct === null ? qs.length + "問" : a.pct + "%"}</span></label>`;
+  }).join("");
+  $("unitList").querySelectorAll("input").forEach(c => c.addEventListener("change", () => {
+    setUnits([...$("unitList").querySelectorAll("input:checked")].map(x => x.value));
+  }));
+}
+function setUnits(ids){ S.settings.units = ids; persist(); renderUnitList(); renderRange(); }
+function renderRange(){
+  const n = pool().length;
+  $("rangeInfo").textContent = n
+    ? `範囲内の問題: ${n}問` + (S.settings.unseenFirst ? `(まだ解いていない問題 ${pool().filter(q => !S.qs[q.id]?.seen).length}問)` : "")
+    : "範囲内の問題がありません。単元と形式を1つ以上選んでください。";
+  document.querySelector('[data-go="quiz"]').disabled = !n;
+}
+document.querySelectorAll("[data-grade]").forEach(b => b.addEventListener("click", () => {
+  const ids = UNITS.filter(u => u.grade === b.dataset.grade).map(u => u.id);
+  const allOn = ids.every(id => S.settings.units.includes(id));
+  setUnits(allOn ? S.settings.units.filter(id => !ids.includes(id)) : [...new Set(S.settings.units.concat(ids))]);
+}));
+$("selAll").addEventListener("click", () => setUnits(UNITS.map(u => u.id)));
+$("selNone").addEventListener("click", () => setUnits([]));
+$("selWeak").addEventListener("click", () => {
+  // 解答が3問以上ある単元のうち、正答率の低い3単元
+  const ranked = UNITS.map(u => [u, accOf(QS.filter(q => q.unit === u.id))]).filter(([,a]) => a.answered >= 3).sort((x,y) => x[1].pct - y[1].pct);
+  if (!ranked.length){ $("rangeInfo").textContent = "まだ記録が少ないため、苦手な単元を選べません。まずは練習してみましょう。"; return; }
+  setUnits(ranked.slice(0, 3).map(([u]) => u.id));
+});
+$("countSelect").addEventListener("change", e => { S.settings.count = Number(e.target.value); persist(); });
+$("unseenFirst").addEventListener("change", e => { S.settings.unseenFirst = e.target.checked; persist(); renderRange(); });
+
+$("loadBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try{
+    const d = validate(JSON.parse(await f.text()));
+    if (!d) throw new Error("問題が見つかりません");
+    S.customData = d; useData(d);
+    $("dataInfo").textContent = `「${f.name}」を読み込みました(${d.questions.length}問)。`;
+  }catch(err){ $("dataInfo").textContent = "読み込めませんでした: " + err.message; }
+  e.target.value = "";
+});
+$("resetDataBtn").addEventListener("click", () => { S.customData = null; useData(BUILTIN); });
+function useData(d){
+  DATA = d; UNITS = d.units; QS = d.questions;
+  S.settings.units = S.settings.units.filter(id => UNITS.some(u => u.id === id));
+  if (!S.settings.units.length) S.settings.units = UNITS.map(u => u.id);
+  persist(); renderHome();
+}
+
+/* ===== 文法ポイント ===== */
+function renderPoints(focusUnit){
+  $("pointList").innerHTML = UNITS.map(u => {
+    const qs = QS.filter(q => q.unit === u.id), a = accOf(qs);
+    return `<div class="panel" id="pt-${esc(u.id)}">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">${esc(u.name)} ${u.grade ? `<span class="grade">${esc(u.grade)}</span>` : ""}</h2>
+        <span class="muted small">${qs.length}問${a.pct === null ? "" : "・正答率 " + a.pct + "%"}</span>
+      </div>
+      ${u.points.length ? `<ul class="points">${u.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      <div class="row" style="margin-top:10px"><button class="btn mini" data-practice="${esc(u.id)}">この単元を練習</button></div>
+    </div>`;
+  }).join("");
+  $("pointList").querySelectorAll("[data-practice]").forEach(b => b.addEventListener("click", () => show("quiz", {unit: b.dataset.practice})));
+  if (focusUnit){ const el = $("pt-" + focusUnit); if (el){ el.scrollIntoView({block: "start"}); el.querySelector("button").focus(); } }
+}
+
+/* ===== 練習 / 復習 ===== */
+let quiz = [], qi = 0, answered = false, reviewMode = false, score = 0, missed = [], scope = null;
+let cur = null;   // 表示中の問題の状態
+function startQuiz(isReview, opt){
+  reviewMode = isReview;
+  scope = opt && opt.unit ? opt.unit : null;
+  $("quizTitle").textContent = isReview ? "復習" : "練習";
+  if (isReview) quiz = shuffle(reviewQs());
+  else if (scope) quiz = shuffle(QS.filter(q => q.unit === scope));
+  else quiz = pick(pool());
+  $("quizScope").textContent = isReview ? "間違えた問題" : scope ? unitOf(scope).name + " だけ" : `${S.settings.units.length}単元から`;
+  qi = 0; score = 0; missed = [];
+  renderQuestion();
+}
+
+/* 会話文を A: / B: ごとの行に分けて表示する。fill(text) で各行の中身を加工 */
+function dialogHTML(text, fill){
+  return `<div class="dialog">` + text.split("\n").map(line => {
+    const m = line.match(/^([A-Z]):\s*(.*)$/);
+    return m ? `<div class="line"><span class="spk">${m[1]}:</span><span>${fill(m[2])}</span></div>` : `<div class="line"><span>${fill(line)}</span></div>`;
+  }).join("") + `</div>`;
+}
+
+function renderQuestion(){
+  const box = $("quizBox");
+  $("quizProg").style.width = quiz.length ? (qi / quiz.length * 100) + "%" : "0";
+  if (!quiz.length){
+    box.innerHTML = reviewMode
+      ? `<p>復習リストは空です。練習で間違えた問題がここに入り、復習で2回続けて正解するとリストから外れます。</p>`
+      : `<p class="muted">範囲内の問題がありません。ホームで単元と形式を選んでください。</p>`;
+    $("quizCounter").textContent = ""; return;
+  }
+  if (qi >= quiz.length) return renderResult();
+  answered = false;
+  const q = quiz[qi], u = unitOf(q.unit);
+  $("quizCounter").textContent = `${qi+1} / ${quiz.length}  ・  正解 ${score}`;
+  const head = `<div><span class="chip">${esc(u.name)}</span>${u.grade ? `<span class="grade">${esc(u.grade)}</span>` : ""} <span class="chip">${TYPES[q.type]}</span></div>`;
+  cur = {q};
+  if (q.type === "choice"){
+    const order = shuffle(q.choices.map((c,i) => i));
+    cur.choices = order.map(i => ({label: q.choices[i], ok: i === q.answer}));
+    box.innerHTML = head + `<p class="instr">( ) に入る最も適切なものを選びましょう。</p>`
+      + dialogHTML(q.q, s => esc(s).replace("( )", `<span class="blank" id="blank">&nbsp;</span>`))
+      + `<div class="choices">${cur.choices.map((c,i) => `<button class="choice" data-i="${i}"><kbd class="n">${i+1}</kbd><span>${esc(c.label)}</span></button>`).join("")}</div>`
+      + `<div class="feedback" id="fb"></div><div id="after"></div>`;
+    box.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => answerChoice(Number(b.dataset.i))));
+  } else if (q.type === "order"){
+    let order;
+    do { order = shuffle(q.tiles.map((t,i) => i)); } while (q.tiles.length > 1 && order.map(i => q.tiles[i]).join(" ") === q.tiles.join(" "));
+    cur.tiles = order.map(i => q.tiles[i]); cur.placed = [];
+    box.innerHTML = head + `<p class="instr">[ ] に入るように語句を並べかえましょう。数字キーで順に置き、<kbd>Backspace</kbd> で1つ戻す、<kbd>Enter</kbd> で答え合わせ。</p>`
+      + dialogHTML(q.q, s => esc(s).replace("[ ]", `<span class="slot" id="slot"></span>`))
+      + `<div class="tiles" id="tiles">${cur.tiles.map((t,i) => `<button class="tile" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(t)}</span></button>`).join("")}</div>`
+      + `<div class="row" style="margin-top:12px"><button class="btn secondary mini" id="undoBtn">1つ戻す <kbd>Backspace</kbd></button><button class="btn secondary mini" id="clearOrd">全部戻す <kbd>Esc</kbd></button><span style="flex:1"></span><button class="btn" id="checkBtn" disabled>答え合わせ <kbd>Enter</kbd></button></div>`
+      + `<div class="feedback" id="fb"></div><div id="after"></div>`;
+    box.querySelectorAll(".tile").forEach(b => b.addEventListener("click", () => placeTile(Number(b.dataset.i))));
+    $("undoBtn").addEventListener("click", undoTile);
+    $("clearOrd").addEventListener("click", clearTiles);
+    $("checkBtn").addEventListener("click", checkOrder);
+    renderSlot();
+  } else {
+    let n = 0;
+    const html = dialogHTML(q.q, s => esc(s).replace(/\[([^\]]+)\]/g, (m, t) => { n++; return `<span class="u" data-u="${n-1}">${t}<sup>${n}</sup></span>`; }));
+    box.innerHTML = head + `<p class="instr">下線部 1〜4 のうち、英語として誤りを含むものを1つ選びましょう。</p>` + html
+      + `<div class="choices">${[0,1,2,3].slice(0, n).map(i => `<button class="choice" data-i="${i}"><kbd class="n">${i+1}</kbd><span>${esc(errParts(q)[i])}</span></button>`).join("")}</div>`
+      + `<div class="feedback" id="fb"></div><div id="after"></div>`;
+    box.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => answerError(Number(b.dataset.i))));
+  }
+}
+const errParts = q => (q.q.match(/\[([^\]]+)\]/g) || []).map(s => s.slice(1, -1));
+const fillBlank = (q, word) => q.q.replace("( )", word);
+
+/* --- 並べかえ --- */
+function placeTile(i){
+  if (answered || !cur || cur.q.type !== "order" || i >= cur.tiles.length || cur.placed.includes(i)) return;
+  cur.placed.push(i); renderSlot();
+}
+function undoTile(){ if (!answered && cur?.placed?.length){ cur.placed.pop(); renderSlot(); } }
+function clearTiles(){ if (!answered && cur?.placed){ cur.placed = []; renderSlot(); } }
+function renderSlot(){
+  const slot = $("slot");
+  slot.innerHTML = cur.placed.length ? cur.placed.map((i,k) => `<button class="placed" data-k="${k}" title="クリックで戻す">${esc(cur.tiles[i])}</button>`).join("") : `<span class="muted small">ここに並べる</span>`;
+  slot.querySelectorAll(".placed").forEach(b => b.addEventListener("click", () => { if (!answered){ cur.placed.splice(Number(b.dataset.k), 1); renderSlot(); } }));
+  document.querySelectorAll("#tiles .tile").forEach(b => b.disabled = answered || cur.placed.includes(Number(b.dataset.i)));
+  const btn = $("checkBtn"); if (btn) btn.disabled = answered || cur.placed.length !== cur.tiles.length;
+}
+function checkOrder(){
+  if (answered || !cur || cur.q.type !== "order" || cur.placed.length !== cur.tiles.length) return;
+  const mine = cur.placed.map(i => cur.tiles[i]).join(" "), right = cur.q.tiles.join(" ");
+  const ok = mine === right;
+  $("slot").classList.add(ok ? "ok" : "ng");
+  ["undoBtn","clearOrd","checkBtn"].forEach(id => $(id).disabled = true);
+  finish(ok, ok ? "" : `あなたの答え: ${mine}`);
+}
+
+/* --- 4択 / 誤り指摘 --- */
+function answerChoice(i){
+  if (answered || !cur || cur.q.type !== "choice" || !cur.choices[i]) return;
+  const ok = cur.choices[i].ok;
+  document.querySelectorAll(".choice").forEach((b,j) => {
+    b.disabled = true;
+    if (cur.choices[j].ok) b.classList.add("correct"); else if (j === i) b.classList.add("wrong");
+  });
+  const bl = $("blank"); bl.textContent = cur.q.choices[cur.q.answer]; bl.classList.add("filled");
+  finish(ok);
+}
+function answerError(i){
+  if (answered || !cur || cur.q.type !== "error" || i >= errParts(cur.q).length) return;
+  const ok = i === cur.q.answer;
+  document.querySelectorAll(".choice").forEach((b,j) => {
+    b.disabled = true;
+    if (j === cur.q.answer) b.classList.add("correct"); else if (j === i) b.classList.add("wrong");
+  });
+  document.querySelectorAll(".u").forEach((s,j) => { if (j === cur.q.answer) s.classList.add("correct"); else if (j === i) s.classList.add("wrong"); });
+  finish(ok);
+}
+
+/* --- 採点・解説(3形式共通) --- */
+function finish(ok, extra){
+  answered = true;
+  const q = cur.q, st = stat(q), d = dayRec();
+  st.seen++; st.last = today(); d.answered++;
+  if (ok){
+    st.correct++; st.streak++; d.correct++; score++;
+    if (reviewMode && st.streak >= 2) removeReview(q);   // 復習で2回続けて正解したらリストから外す
+  } else {
+    st.wrong++; st.streak = 0; addReview(q); missed.push(q);
+  }
+  persist();
+  const fb = $("fb");
+  fb.className = "feedback " + (ok ? "ok" : "ng");
+  fb.textContent = ok ? "正解!" + (reviewMode && st.streak >= 2 ? " 復習リストから外しました。" : "") : "不正解。" + (extra ? " " + extra : "");
+  let ans;
+  if (q.type === "choice") ans = `正解: <b>${esc(q.choices[q.answer])}</b>`;
+  else if (q.type === "order") ans = `正解: <b>${esc(q.tiles.join(" "))}</b><br><span class="small muted">${esc(q.q.replace("[ ]", q.tiles.join(" ")).replace(/\n/g, " / "))}</span>`;
+  else ans = `誤り: <b>${q.answer + 1}</b>(${esc(errParts(q)[q.answer])})  正しくは <b>${esc(q.fix)}</b>`;
+  $("after").innerHTML = `<div class="explain">
+      <div class="ans">${ans}</div>
+      ${q.exp ? `<p><span class="chip">解説</span>${esc(q.exp)}</p>` : ""}
+      ${q.ja ? `<p class="muted"><span class="chip">訳</span>${esc(q.ja).replace(/\s*B: /, "<br>B: ")}</p>` : ""}
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px">
+      <button class="btn secondary" id="toPoint">この単元のポイント <kbd>P</kbd></button>
+      <button class="btn" id="nextQ">次へ <kbd>Enter</kbd></button>
+    </div>`;
+  $("nextQ").addEventListener("click", nextQuestion);
+  $("toPoint").addEventListener("click", () => show("points", q.unit));
+  $("nextQ").focus();
+}
+function nextQuestion(){ if (answered){ qi++; renderQuestion(); } }
+function renderResult(){
+  $("quizCounter").textContent = `${quiz.length} / ${quiz.length}`;
+  $("quizProg").style.width = "100%";
+  const pct = Math.round(score / quiz.length * 100);
+  const byUnit = {};
+  missed.forEach(q => byUnit[q.unit] = (byUnit[q.unit] || 0) + 1);
+  $("quizBox").innerHTML = `<h2>結果: ${score} / ${quiz.length}(${pct}%)</h2>
+    ${missed.length ? `<h3>間違えた問題(復習リストに追加しました)</h3>
+      <table><tr><th>単元</th><th>形式</th><th>問題</th></tr>${missed.map(q => `<tr><td>${esc(unitOf(q.unit).name)}</td><td>${TYPES[q.type]}</td><td>${esc(snippet(q))}</td></tr>`).join("")}</table>
+      <p class="small muted" style="margin-top:10px">見直すとよい単元: ${Object.entries(byUnit).sort((a,b) => b[1]-a[1]).map(([u,n]) => `${esc(unitOf(u).name)}(${n}問)`).join("、")}</p>`
+      : `<p>全問正解です!</p>`}
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="againBtn">もう一度 <kbd>Enter</kbd></button>
+      ${S.review.length ? `<button class="btn secondary" id="toReview">復習する(${S.review.length}問)</button>` : ""}
+    </div>`;
+  $("againBtn").addEventListener("click", restartQuiz);
+  $("toReview")?.addEventListener("click", () => show("review"));
+}
+function restartQuiz(){ startQuiz(reviewMode, scope ? {unit: scope} : null); }
+function snippet(q){
+  let s = q.type === "order" ? q.q.replace("[ ]", "[ … ]") : q.type === "error" ? q.q.replace(/\[([^\]]+)\]/g, "$1") : q.q;
+  s = s.replace(/\n/g, " / ");
+  return s.length > 70 ? s.slice(0, 68) + "…" : s;
+}
+
+/* ===== 学習記録 ===== */
+function renderRecords(){
+  const all = accOf(QS);
+  $("recStats").innerHTML = [
+    ["累計の解答数", all.answered + "問"],
+    ["累計の正答率", all.pct === null ? "—" : all.pct + "%"],
+    ["解いた問題", all.seen + " / " + QS.length],
+    ["連続学習", streakDays() + "日"]
+  ].map(([k,v]) => `<div class="stat"><span class="muted small">${k}</span><b>${v}</b></div>`).join("");
+
+  const days = []; const d = new Date(); d.setDate(d.getDate()-13);
+  for (let i=0; i<14; i++){ const k = ymd(d); days.push([k, S.daily[k]?.answered || 0]); d.setDate(d.getDate()+1); }
+  const max = Math.max(1, ...days.map(x => x[1]));
+  $("recBars").innerHTML = days.map(([k,n]) => `<div title="${k}: ${n}問" style="height:${n/max*100}%"></div>`).join("");
+  $("recBarLabels").innerHTML = days.map(([k]) => `<span>${Number(k.slice(8))}</span>`).join("");
+
+  $("recUnits").innerHTML = `<tr><th>単元</th><th>学年</th><th>解いた</th><th>正答率</th><th></th></tr>` + UNITS.map(u => {
+    const qs = QS.filter(q => q.unit === u.id), a = accOf(qs);
+    return `<tr><td>${esc(u.name)}</td><td>${esc(u.grade)}</td><td>${a.seen} / ${qs.length}</td>
+      <td>${a.pct === null ? "—" : `<span class="meter"><i style="width:${a.pct}%"></i></span>${a.pct}%`}</td>
+      <td><button class="btn secondary mini" data-practice="${esc(u.id)}">練習</button></td></tr>`;
+  }).join("");
+  $("recUnits").querySelectorAll("[data-practice]").forEach(b => b.addEventListener("click", () => show("quiz", {unit: b.dataset.practice})));
+
+  $("recTypes").innerHTML = `<tr><th>形式</th><th>解いた</th><th>正答率</th></tr>` + Object.entries(TYPES).map(([k,v]) => {
+    const qs = QS.filter(q => q.type === k), a = accOf(qs);
+    return `<tr><td>${v}</td><td>${a.seen} / ${qs.length}</td><td>${a.pct === null ? "—" : a.pct + "%"}</td></tr>`;
+  }).join("");
+
+  const weak = QS.map(q => [q, S.qs[q.id]]).filter(([,s]) => s && s.wrong).sort((a,b) => b[1].wrong - a[1].wrong || a[1].correct - b[1].correct).slice(0, 12);
+  $("recWeak").innerHTML = weak.length
+    ? `<tr><th>単元</th><th>問題</th><th>間違い</th><th>正解</th></tr>` + weak.map(([q,s]) => `<tr><td>${esc(unitOf(q.unit).name)}</td><td>${esc(snippet(q))}</td><td>${s.wrong}</td><td>${s.correct}</td></tr>`).join("")
+    : `<tr><td class="muted">まだ間違えた問題はありません。</td></tr>`;
+}
+function streakDays(){
+  let n = 0; const d = new Date();
+  if (!S.daily[ymd(d)]?.answered) d.setDate(d.getDate()-1);
+  while (S.daily[ymd(d)]?.answered){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+$("exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({exported: new Date().toISOString(), qs: S.qs, review: S.review, daily: S.daily}, null, 2)], {type: "application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "bunpou-record-" + today() + ".json"; a.click();
+});
+$("clearBtn").addEventListener("click", () => {
+  if (!confirm("学習記録をすべて消します。よろしいですか?")) return;
+  S.qs = {}; S.review = []; S.daily = {}; persist(); renderRecords();
+});
+
+/* ===== キーボード ===== */
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  const nav = {h:"home", g:"points", q:"quiz", r:"review", l:"records"};
+  if (view === "quiz" || view === "review"){
+    const inQ = cur && qi < quiz.length;
+    if (/^[1-9]$/.test(k) && inQ && !answered){
+      const i = Number(k) - 1;
+      if (cur.q.type === "choice") answerChoice(i);
+      else if (cur.q.type === "error") answerError(i);
+      else placeTile(i);
+      return;
+    }
+    if (k === "backspace" && inQ && cur.q.type === "order"){ e.preventDefault(); undoTile(); return; }
+    if (k === "escape" && inQ && cur.q.type === "order"){ clearTiles(); return; }
+    if (k === "enter"){
+      e.preventDefault();
+      if (qi >= quiz.length && quiz.length) restartQuiz();
+      else if (answered) nextQuestion();
+      else if (inQ && cur.q.type === "order") checkOrder();
+      return;
+    }
+    if (k === "p" && answered && inQ){ show("points", cur.q.unit); return; }
+  }
+  if (nav[k]){ show(nav[k]); }
+});
+
+/* ===== ユーティリティ ===== */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+show("home");
+</script>
+<script src="ios.js"></script>
+</body>
+</html>
