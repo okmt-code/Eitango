@@ -13,6 +13,12 @@
   var standalone = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
   if (isIOS) root.classList.add("ios");
   if (standalone) root.classList.add("standalone");
+  window.__iosToast = function(msg){
+    var old = document.querySelector(".ios-toast"); if (old) old.remove();
+    var t = document.createElement("div"); t.className = "ios-toast"; t.setAttribute("role", "status"); t.textContent = msg;
+    t.addEventListener("click", function(){ t.remove(); });
+    document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 8000);
+  };
   function store(k, v){ try{ if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){ return null; } }
 
   /* ===== 入力モード(タッチ / キーボード) ===== */
@@ -68,7 +74,7 @@
     var g = document.createElement("div");
     g.className = "panel ios-guide";
     g.innerHTML = '<h2>iPad・iPhone で使うとき</h2>'
-      + (APP === "eitango" ? '<p class="small">発音が聞こえないときは、iPhone の消音モード(マナーモード)をオフにして、音量を上げてください。</p>' : '')
+      + (APP === "eitango" ? '<p class="small"><b>発音が聞こえないときは、iPhone・iPad のマナーモード(消音)をオフにして、音量を上げてください。</b></p>' : '')
       + '<p class="small ios-touch-only">ボタンや選択肢はタップで操作できます。iPad にキーボードをつないだときは、パソコン版と同じキー操作も使えます。</p>'
       + '<div class="row"><a class="btn secondary" href="' + other[0] + '" style="text-decoration:none">' + other[1] + 'を開く</a></div>';
     home.appendChild(g);
@@ -125,21 +131,46 @@
     pickBest();
     try{ synth.addEventListener("voiceschanged", pickBest); }catch(e){}
     var userChoseVoice = function(){ try{ return typeof S !== "undefined" && S.settings && S.settings.voice; }catch(e){ return false; } };
-    var origSpeak = synth.speak.bind(synth);
+    var origSpeak = synth.speak.bind(synth), origCancel = synth.cancel.bind(synth);
+    // 何も読んでいないときに cancel すると、直後の読み上げが鳴らない端末があるので、読んでいるときだけ止める
+    synth.cancel = function(){ try{ if (synth.speaking || synth.pending) return origCancel(); }catch(e){ return origCancel(); } };
+    var hasEnglish = function(){ var vs = []; try{ vs = synth.getVoices() || []; }catch(e){} return vs.some(function(v){ return /^en/i.test(v.lang); }); };
     synth.speak = function(u){
       try{
         if (!best) pickBest();
         var needs = !u.voice || (NOVELTY.test(u.voice.name) && !userChoseVoice());
         if (best && needs && (!u.lang || /^en/i.test(u.lang))){ u.voice = best; u.lang = best.lang; }
+        if (/^en/i.test(u.lang || "") && !hasEnglish() && synth.getVoices().length) voiceWarning(true);
+        // iPhone・iPad はマナーモード(消音)だと読み上げも鳴らないので、最初の1回だけ案内する
+        if (isIOS && store("ios.muteTip") !== "1"){ store("ios.muteTip", "1"); toast("🔇 音が聞こえないときは、マナーモード(消音)をオフにして音量を上げてください。"); }
+        u.addEventListener("error", function(e){
+          if (e.error === "interrupted" || e.error === "canceled" || u.__retried) return;
+          if (u.voice){   // 選んだ声で失敗したら、声を指定せずにもう一度
+            var r = new SpeechSynthesisUtterance(u.text); r.lang = "en-US"; r.rate = u.rate; r.__retried = true;
+            r.addEventListener("error", function(e2){ if (e2.error !== "interrupted" && e2.error !== "canceled") voiceWarning(true); });
+            origSpeak(r);
+          } else voiceWarning(true);
+        });
       }catch(e){}
       return origSpeak(u);
     };
-    // iOS は最初の読み上げがタップの中でないと鳴らないことがあるので、最初のタップで無音の読み上げをしておく
-    var unlocked = false;
-    addEventListener("touchend", function(){
-      if (unlocked) return; unlocked = true;
-      try{ var u = new SpeechSynthesisUtterance(" "); u.volume = 0; origSpeak(u); }catch(e){}
-    }, {capture:true, passive:true});
+    // 英語の声が入っていない端末では、何も鳴らないので案内を出す
+    var warned = false;
+    function voiceWarning(toast){
+      var msg = isIOS
+        ? "英語の読み上げ用の声が見つかりません。「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」→「英語」から声を追加してください。"
+        : "このパソコンに英語の読み上げ用の声が入っていないため、発音が鳴りません。Microsoft Edge か Google Chrome で開くか、Windows の「設定」→「時刻と言語」→「音声認識(または音声)」→「音声の追加」で「英語(米国)」を追加してください。";
+      var g = document.querySelector(".ios-guide");
+      if (g && !g.querySelector(".ios-voice-warn")){
+        var p = document.createElement("p"); p.className = "small ios-voice-warn"; p.style.color = "var(--ng)"; p.textContent = msg;
+        g.insertBefore(p, g.children[1] || null);
+      }
+      if (toast && !warned){ warned = true; window.__iosToast(msg); }
+    }
+    function toast(msg){ window.__iosToast(msg); }
+    var checkVoices = function(){ try{ if (synth.getVoices().length && !hasEnglish()) voiceWarning(false); }catch(e){} };
+    try{ synth.addEventListener("voiceschanged", checkVoices); }catch(e){}
+    setTimeout(checkVoices, 1500);
   }
 
   /* ===== 記録の書き出し: iOS は共有シート(「ファイルに保存」など)で渡す ===== */

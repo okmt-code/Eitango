@@ -65,3 +65,7 @@ main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env
   #view-cards .panel:first-child h2,#view-quiz .panel:first-child h2{font-size:17px}
   #view-cards .progress,#view-quiz .progress{margin:8px 0}
 }
+
+/* 読み上げの案内 */
+.ios-toast{position:fixed;left:16px;right:16px;margin:0 auto;width:fit-content;bottom:calc(16px + env(safe-area-inset-bottom));z-index:50;max-width:min(560px,calc(100vw - 32px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+@media (max-width:600px){.ios-toast{bottom:calc(76px + env(safe-area-inset-bottom))}}
