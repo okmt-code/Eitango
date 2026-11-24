@@ -489,13 +489,26 @@ function loadVoices(){
   try{
     voices = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
     const sel = $("voiceSelect"); if (!sel) return;
-    sel.innerHTML = `<option value="">自動(英語の声)</option>` + voices.map(v => `<option value="${esc(v.name)}" ${v.name === S.settings.voice ? "selected" : ""}>${esc(v.name)}(${v.lang})</option>`).join("");
+    const auto = pickVoice(true);
+    sel.innerHTML = `<option value="">自動(英語の声)${auto ? "：いまは " + esc(auto.name) : ""}</option>` + voices.map(v => `<option value="${esc(v.name)}" ${v.name === S.settings.voice ? "selected" : ""}>${esc(v.name)}(${v.lang})</option>`).join("");
   }catch(e){}
 }
-function pickVoice(){
-  if (S.settings.voice){ const v = voices.find(v => v.name === S.settings.voice); if (v) return v; }
-  // 日本語の声で英語を読まないよう、必ず英語の声を選ぶ(米国英語・自然な声を優先)
-  const score = v => (/en[-_]US/i.test(v.lang) ? 4 : 0) + (/natural|online|google/i.test(v.name) ? 2 : 0) + (v.localService ? 0 : 1);
+// 英語の「面白音声」(Bubbles, Zarvox など)は聞き取りにくいので自動では選ばない(えいご あそびと同じ選び方)
+const NOVELTY = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Deranged|Good News|Hysterical|Jester|Junior|Kathy|Organ|Pipe Organ|Princess|Ralph|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley)\b/i;
+const PREFER = ["Samantha", "Ava", "Allison", "Susan", "Nicky", "Joelle", "Zoe", "Aria", "Jenny", "Google US English"];
+function pickVoice(autoOnly){
+  if (!autoOnly && S.settings.voice){ const v = voices.find(v => v.name === S.settings.voice); if (v) return v; }
+  // 日本語の声で英語を読まないよう、必ず英語の声を選ぶ(米国英語・自然な声・高音質版を優先)
+  const score = v => {
+    let s = 0;
+    if (NOVELTY.test(v.name)) s -= 100;
+    if (/^en[-_]US/i.test(v.lang)) s += 4; else if (/^en[-_](GB|AU|CA)/i.test(v.lang)) s += 2;
+    if (/Natural|Online|Enhanced|Premium|Neural/i.test(v.name)) s += 3;
+    if (/Multilingual/i.test(v.name)) s -= 3;   // 多言語の声は英語の発音にくせがあるので後回し
+    const i = PREFER.findIndex(p => v.name.indexOf(p) >= 0); if (i >= 0) s += 6 - i * 0.2;
+    if (/Google/.test(v.name)) s += 2;
+    return s;
+  };
   return voices.slice().sort((a,b) => score(b) - score(a))[0] || null;
 }
 /* 録音で流す語: 端末の声では発音が正しくならなかった語は、アプリの作者が録音した音声を流す(2026-11-24)。
