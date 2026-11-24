@@ -511,8 +511,8 @@ function pickVoice(){
   return voices.slice().sort((a, b) => score(b) - score(a))[0] || null;
 }
 /* 読み方の書きかえ表: 声によっては辞書どおりに読まれない語を、読ませたい音に近いつづりにして読ませる(画面の表示は変わらない)
-   kangaroo … 声によって「KANG-ga-roo」と前を強く読んだり、くずれた音になるため。2語に分けて最後の roo を強く読ませる */
-const SPEAK_AS = {"kangaroo": "kanga roo"};
+   kangaroo … 声によって「KANG-ga-roo」と前を強く読むため。「kanga roo」では複合語あつかいで前が強いままだった(2026-11-24 ユーザー確認)。3語に分けて、文の最後の roo を強く読ませる */
+const SPEAK_AS = {"kangaroo": "kang guh roo"};
 const sayText = t => SPEAK_AS[t] || t;
 let tipShown = false;
 function speak(list, rate){
