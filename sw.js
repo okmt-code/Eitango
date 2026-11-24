@@ -1,6 +1,6 @@
 /* オフライン用 service worker(build_ios.py が sw.js として書き出します。sw.js は直接編集しないでください)
    ネットにつながるときは最新版を取りに行き(ブラウザの一時保存を使わず確認する)、つながらないときは保存しておいた版で動きます。 */
-const CACHE = "eigo-ios-f6655f372e";
+const CACHE = "eigo-ios-9bd4ef80fb";
 const FILES = ["./", "index.html", "eitango.html", "bunpou.html", "shogaku.html", "ios.css", "ios.js", "manifest-shogaku.webmanifest", "manifest-index.webmanifest", "manifest-eitango.webmanifest", "manifest-bunpou.webmanifest", "icons/index-180.png", "icons/index-192.png", "icons/index-512.png", "icons/eitango-180.png", "icons/eitango-192.png", "icons/eitango-512.png", "icons/bunpou-180.png", "icons/bunpou-192.png", "icons/bunpou-512.png", "icons/shogaku-180.png", "icons/shogaku-192.png", "icons/shogaku-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, {cache: "reload"})))).then(() => self.skipWaiting()));
